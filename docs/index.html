@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rundownly — AI-powered YouTube summaries from your desktop</title>
+  <meta name="description"
+    content="Summarize any YouTube video in seconds with AI. Runs locally, no cloud, no sign-up. Powered by Claude.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Hero -->
+  <section class="hero">
+    <canvas id="particle-canvas"></canvas>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" id="theme-icon-moon">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+      </svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" id="theme-icon-sun" style="display:none">
+        <circle cx="12" cy="12" r="5" />
+        <line x1="12" y1="1" x2="12" y2="3" />
+        <line x1="12" y1="21" x2="12" y2="23" />
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+        <line x1="1" y1="12" x2="3" y2="12" />
+        <line x1="21" y1="12" x2="23" y2="12" />
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+      </svg>
+    </button>
+
+    <div class="hero-content">
+      <img src="rundownly_logo.png" alt="Rundownly logo" class="hero-logo" width="160" height="160">
+      <p class="hero-brand">Rundownly</p>
+      <p class="hero-tagline">Get instant AI-powered YouTube summaries.</p>
+      <p class="hero-subtitle">Summarize any YouTube video in seconds — right from your desktop.<br>Runs locally. No
+        cloud. No sign-up.</p>
+
+      <div class="download-area">
+        <a href="#" class="download-btn" id="download-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span id="download-text">Download for macOS</span>
+        </a>
+        <p class="alt-platforms">Also available for <button class="platform-link" data-os="windows">Windows</button>
+          &middot; <button class="platform-link" data-os="linux">Linux</button></p>
+      </div>
+
+      <div class="version-info">
+        <span id="version-tag">v0.1.0</span>
+        <span class="badge stable" id="stability-badge">Stable</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="section reveal" id="how-it-works">
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps">
+      <div class="step-card glass">
+        <span class="step-number">1</span>
+        <h3>Download the app</h3>
+        <p>Free and open source. No signup needed.</p>
+      </div>
+      <div class="step-arrow">&rarr;</div>
+      <div class="step-card glass">
+        <span class="step-number">2</span>
+        <h3>Add your API key</h3>
+        <p>Get one from <a href="https://console.anthropic.com/settings/keys" target="_blank"
+            rel="noopener noreferrer">Anthropic</a></p>
+      </div>
+      <div class="step-arrow">&rarr;</div>
+      <div class="step-card glass">
+        <span class="step-number">3</span>
+        <h3>Paste a YouTube link</h3>
+        <p>Get an instant AI summary</p>
+      </div>
+    </div>
+    <p class="byok-note">&ldquo;Bring your own API key&rdquo; &mdash; you control your costs. <a
+        href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">Get an Anthropic
+        API key &rarr;</a></p>
+  </section>
+
+  <!-- Features -->
+  <section class="section reveal" id="features">
+    <h2 class="section-title">Features</h2>
+    <div class="features-grid">
+      <div class="feature-card glass">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+        </div>
+        <h3>Runs Locally</h3>
+        <p>No server. YouTube works from YOUR IP. No IP blocks.</p>
+      </div>
+      <div class="feature-card glass">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </div>
+        <h3>Secure</h3>
+        <p>API key stored in your OS keychain. Never leaves your machine.</p>
+      </div>
+      <div class="feature-card glass">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+        </div>
+        <h3>Timestamps</h3>
+        <p>Summary links back to exact video moments.</p>
+      </div>
+      <div class="feature-card glass">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+        </div>
+        <h3>11 Languages</h3>
+        <p>English, Spanish, French, German, Japanese, and more.</p>
+      </div>
+      <div class="feature-card glass">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14" />
+            <line x1="4" y1="10" x2="4" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12" y2="3" />
+            <line x1="20" y1="21" x2="20" y2="16" />
+            <line x1="20" y1="12" x2="20" y2="3" />
+            <line x1="1" y1="14" x2="7" y2="14" />
+            <line x1="9" y1="8" x2="15" y2="8" />
+            <line x1="17" y1="16" x2="23" y2="16" />
+          </svg>
+        </div>
+        <h3>3 Lengths</h3>
+        <p>Short, Medium, or Long. You pick.</p>
+      </div>
+      <div class="feature-card glass">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </div>
+        <h3>Dark Mode</h3>
+        <p>Matches your system theme. Easy on the eyes.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- App Screenshot (TODO: add later) -->
+  <!-- <section class="section reveal" id="app-preview">
+    <h2 class="section-title">See It in Action</h2>
+    <div class="app-screenshot"></div>
+  </section> -->
+
+  <!-- Installation -->
+  <section class="section reveal" id="installation">
+    <h2 class="section-title">First-time setup</h2>
+    <div class="tab-bar" role="tablist">
+      <button class="tab active" data-tab="macos" role="tab" aria-selected="true">macOS</button>
+      <button class="tab" data-tab="windows" role="tab" aria-selected="false">Windows</button>
+      <button class="tab" data-tab="linux" role="tab" aria-selected="false">Linux</button>
+    </div>
+    <div class="tab-content glass active" data-tab="macos" role="tabpanel">
+      <ol>
+        <li>Download the <code>.dmg</code> file above</li>
+        <li>Open the <code>.dmg</code> and drag to Applications</li>
+        <li>First launch: right-click the app &rarr; &ldquo;Open&rdquo; &rarr; &ldquo;Open&rdquo; again</li>
+        <li>Enter your Anthropic API key when prompted</li>
+        <li>Paste a YouTube URL and hit Summarize!</li>
+      </ol>
+      <div class="install-note">
+        <strong>Note:</strong> You&rsquo;ll see an &ldquo;unidentified developer&rdquo; warning. This is normal for free
+        open-source apps that aren&rsquo;t code-signed.
+      </div>
+    </div>
+    <div class="tab-content glass" data-tab="windows" role="tabpanel">
+      <ol>
+        <li>Download the <code>.msi</code> installer above</li>
+        <li>Run the installer</li>
+        <li>If SmartScreen appears: click &ldquo;More info&rdquo; &rarr; &ldquo;Run anyway&rdquo;</li>
+        <li>Enter your Anthropic API key when prompted</li>
+        <li>Paste a YouTube URL and hit Summarize!</li>
+      </ol>
+      <div class="install-note">
+        <strong>Note:</strong> Windows SmartScreen may warn about an unrecognized app. This is normal for open-source
+        software without a paid code-signing certificate.
+      </div>
+    </div>
+    <div class="tab-content glass" data-tab="linux" role="tabpanel">
+      <ol>
+        <li>Download the <code>.AppImage</code> file above</li>
+        <li>Make it executable: <code>chmod +x Rundownly-*.AppImage</code></li>
+        <li>Run it: <code>./Rundownly-*.AppImage</code></li>
+        <li>Enter your Anthropic API key when prompted</li>
+        <li>Paste a YouTube URL and hit Summarize!</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Changelog -->
+  <section class="section reveal" id="changelog">
+    <h2 class="section-title">What&rsquo;s New</h2>
+    <div class="release" id="releases">
+      <div class="release-card glass">
+        <div class="release-header">
+          <strong>v0.1.0</strong> &mdash; February 2026
+          <span class="badge stable">Stable</span>
+        </div>
+        <ul>
+          <li>Initial release</li>
+          <li>AI-powered video summaries with timestamps</li>
+          <li>11 language support</li>
+          <li>3 summary lengths (Short, Medium, Long)</li>
+          <li>Dark mode support</li>
+        </ul>
+      </div>
+    </div>
+    <p class="changelog-link"><a href="https://github.com" target="_blank" rel="noopener noreferrer">See all releases
+        &rarr;</a></p>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p class="footer-brand">Rundownly</p>
+    <p class="footer-tagline">Open source &middot; Powered by Claude AI</p>
+    <div class="footer-links">
+      <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <span>&middot;</span>
+      <a href="https://github.com" target="_blank" rel="noopener noreferrer">Report a bug</a>
+      <span>&middot;</span>
+      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">Get API key</a>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
