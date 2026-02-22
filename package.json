@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "tauri dev",
     "lint": "eslint",
+    "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
   },
