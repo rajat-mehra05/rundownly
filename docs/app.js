@@ -25,22 +25,88 @@ if (toggleBtn) {
   });
 }
 
-// ── OS detection ──
-(function () {
-  var ua = navigator.userAgent.toLowerCase();
-  var os = 'macos';
-  if (ua.indexOf('win') !== -1) os = 'windows';
-  else if (ua.indexOf('linux') !== -1) os = 'linux';
+// ── OS detection & download links ──
+var REPO = 'rajat-mehra05/rundownly';
+var RELEASES_API = 'https://api.github.com/repos/' + REPO + '/releases/latest';
+var RELEASES_PAGE = 'https://github.com/' + REPO + '/releases/latest';
 
-  var labels = {
-    macos: 'Download for macOS',
-    windows: 'Download for Windows',
-    linux: 'Download for Linux',
-  };
+var LABELS = {
+  macos: 'Download for macOS',
+  windows: 'Download for Windows',
+  linux: 'Download for Linux',
+};
 
+// Detect current OS
+var ua = navigator.userAgent.toLowerCase();
+var currentOS = 'macos';
+if (ua.indexOf('win') !== -1) currentOS = 'windows';
+else if (ua.indexOf('linux') !== -1) currentOS = 'linux';
+
+// Download URLs — fallback to releases page
+var downloadUrls = { macos: RELEASES_PAGE, windows: RELEASES_PAGE, linux: RELEASES_PAGE };
+
+function isAppleSilicon() {
+  return !/Intel/.test(navigator.userAgent);
+}
+
+function updateDownloadBtn(os) {
+  var btn = document.getElementById('download-btn');
   var textEl = document.getElementById('download-text');
-  if (textEl) textEl.textContent = labels[os];
-})();
+  if (textEl) textEl.textContent = LABELS[os] || LABELS.macos;
+  if (btn) btn.href = downloadUrls[os] || RELEASES_PAGE;
+}
+
+// Set initial label + href
+updateDownloadBtn(currentOS);
+
+// Fetch latest release from GitHub API
+fetch(RELEASES_API)
+  .then(function (res) {
+    if (!res.ok) throw new Error(res.status);
+    return res.json();
+  })
+  .then(function (data) {
+    if (!data || !data.assets) return;
+
+    // Update version tag
+    if (data.tag_name) {
+      var versionEl = document.getElementById('version-tag');
+      if (versionEl) versionEl.textContent = data.tag_name;
+    }
+
+    var assets = data.assets;
+
+    // macOS: pick .dmg matching architecture
+    var dmgs = assets.filter(function (a) { return /\.dmg$/i.test(a.name); });
+    if (dmgs.length > 0) {
+      if (dmgs.length > 1) {
+        var preferred = isAppleSilicon()
+          ? dmgs.find(function (a) { return /aarch64|arm64/i.test(a.name); })
+          : dmgs.find(function (a) { return /x86_64|x64|intel/i.test(a.name); });
+        downloadUrls.macos = (preferred || dmgs[0]).browser_download_url;
+      } else {
+        downloadUrls.macos = dmgs[0].browser_download_url;
+      }
+    }
+
+    // Windows: prefer .msi, fallback to .exe
+    var msi = assets.find(function (a) { return /\.msi$/i.test(a.name); });
+    var exe = assets.find(function (a) { return /\.exe$/i.test(a.name); });
+    if (msi) downloadUrls.windows = msi.browser_download_url;
+    else if (exe) downloadUrls.windows = exe.browser_download_url;
+
+    // Linux: prefer .AppImage, fallback to .deb
+    var appImage = assets.find(function (a) { return /\.AppImage$/i.test(a.name); });
+    var deb = assets.find(function (a) { return /\.deb$/i.test(a.name); });
+    if (appImage) downloadUrls.linux = appImage.browser_download_url;
+    else if (deb) downloadUrls.linux = deb.browser_download_url;
+
+    // Refresh the button with real URL
+    updateDownloadBtn(currentOS);
+  })
+  .catch(function () {
+    // API failed (no releases yet, rate limit, etc.) — keep fallback URLs
+  });
 
 // ── Tab switching ──
 document.querySelectorAll('.tab').forEach(function (tab) {
@@ -66,14 +132,7 @@ document.querySelectorAll('.tab').forEach(function (tab) {
 document.querySelectorAll('.platform-link').forEach(function (link) {
   link.addEventListener('click', function () {
     var os = this.getAttribute('data-os');
-    var labels = {
-      windows: 'Download for Windows',
-      linux: 'Download for Linux',
-      macos: 'Download for macOS',
-    };
-
-    var textEl = document.getElementById('download-text');
-    if (textEl) textEl.textContent = labels[os] || labels.macos;
+    updateDownloadBtn(os);
   });
 });
 
