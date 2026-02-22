@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
+import ParticleCanvas from '@/components/ParticleCanvas';
 import SummarizerForm from '@/components/SummarizerForm';
 import VideoInfo from '@/components/VideoInfo';
 import SummaryDisplay from '@/components/SummaryDisplay';
@@ -46,14 +47,11 @@ export default function Home() {
   if (hasKey === null) return null;
 
   return (
-    <div className="flex flex-col min-h-screen max-w-2xl mx-auto">
+    <div className="relative flex flex-col min-h-screen max-w-2xl mx-auto">
+      <ParticleCanvas />
       <Header onOpenSettings={() => setShowSettings(true)} />
 
       <main className="flex-1 px-6 pb-6 space-y-4">
-        <p className="text-sm text-muted">
-          Paste any YouTube link and get an instant AI summary
-        </p>
-
         <SummarizerForm
           onSubmit={handleSubmit}
           disabled={!hasKey}
@@ -69,9 +67,10 @@ export default function Home() {
         <VideoInfo
           title={metadata?.title}
           channel={metadata?.author}
+          videoId={metadata?.id}
         />
 
-        <SummaryDisplay content={summary} isLoading={isLoading} />
+        <SummaryDisplay content={summary} isLoading={isLoading} videoId={metadata?.id} />
       </main>
 
       <footer className="px-6 py-4 text-center text-xs text-muted">

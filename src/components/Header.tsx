@@ -28,12 +28,22 @@ export default function Header({ onOpenSettings }: HeaderProps) {
   }, [dark]);
 
   return (
-    <header className="flex items-center justify-between px-6 py-4">
-      <div className="flex items-center gap-2">
-        <img src={logo.src} alt="Rundownly" width="28" height="28" />
-        <h1 className="text-lg font-semibold tracking-tight">Rundownly</h1>
+    <header className="relative pt-8 pb-4 px-6">
+      <div className="flex flex-col items-center gap-3">
+        <img
+          src={logo.src}
+          alt="Rundownly"
+          width="120"
+          height="120"
+          className="hero-logo"
+        />
+        <h1 className="hero-brand">Rundownly</h1>
+        {/* <p className="hero-tagline">Get instant AI-powered YouTube summaries.</p> */}
+        <p className="text-sm text-muted text-center max-w-md leading-relaxed">
+          Summarize any YouTube video in seconds — right from your desktop.
+        </p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="absolute right-6 top-8 flex items-center gap-2">
         <button
           onClick={toggleTheme}
           className="rounded-lg p-2 text-muted hover:bg-input-bg transition-colors"

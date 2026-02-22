@@ -1,13 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { saveApiKey, getSettings, saveSettings } from '@/lib/tauri';
-import { DEFAULT_MODEL } from '@/constants';
-
-const MODELS = [
-  { value: 'claude-sonnet-4-5-20250929', label: 'Claude Sonnet 4.5' },
-  { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
-];
+import { saveApiKey } from '@/lib/tauri';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -16,12 +10,7 @@ interface SettingsPanelProps {
 export default function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [apiKey, setApiKey] = useState('');
   const [showKey, setShowKey] = useState(false);
-  const [model, setModel] = useState(DEFAULT_MODEL);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    getSettings().then((s) => setModel(s.model));
-  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -37,12 +26,11 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
       if (apiKey.trim()) {
         await saveApiKey(apiKey.trim());
       }
-      await saveSettings({ model });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
-  }, [apiKey, model, onClose]);
+  }, [apiKey, onClose]);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-overlay">
@@ -87,20 +75,6 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
               )}
             </button>
           </div>
-        </div>
-
-        {/* Model */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-2">Model</label>
-          <select
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="w-full bg-input-bg border border-input-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
-          >
-            {MODELS.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
         </div>
 
         {error ? <p className="text-red-500 text-xs mb-4">{error}</p> : null}

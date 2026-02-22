@@ -6,6 +6,9 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "store:default"
+    "store:default",
+    "dialog:default",
+    "fs:default",
+    "fs:write-all"
   ]
 }

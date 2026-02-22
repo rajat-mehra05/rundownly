@@ -143,9 +143,9 @@ code {
 }
 
 .hero-logo {
-  width: clamp(120px, 18vw, 180px);
+  width: clamp(180px, 25vw, 280px);
   height: auto;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   filter: drop-shadow(0 0 30px var(--accent-glow-strong)) drop-shadow(0 0 60px var(--accent-glow));
 }
 
