@@ -164,6 +164,11 @@ async fn fetch_watch_page(client: &reqwest::Client, video_id: &str) -> Result<St
             .text()
             .await
             .map_err(|e| format!("Failed to read video page: {}", e))?;
+
+        if retry.contains("action=\"https://consent.youtube.com/s\"") {
+            return Err("YouTube consent page persisted after retry. Try again later.".to_string());
+        }
+
         return Ok(retry);
     }
 
@@ -196,7 +201,7 @@ async fn fetch_caption_tracks(
         "videoId": video_id
     });
 
-    let resp: serde_json::Value = client
+    let raw_resp = client
         .post(&url)
         .timeout(REQUEST_TIMEOUT)
         .header("Content-Type", "application/json")
@@ -204,7 +209,25 @@ async fn fetch_caption_tracks(
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("Failed to call Innertube API: {}", e))?
+        .map_err(|e| format!("Failed to call Innertube API: {}", e))?;
+
+    let status = raw_resp.status();
+    if !status.is_success() {
+        let body_preview: String = raw_resp
+            .text()
+            .await
+            .unwrap_or_default()
+            .chars()
+            .take(200)
+            .collect();
+        return Err(format!(
+            "Innertube API returned HTTP {}: {}",
+            status.as_u16(),
+            body_preview
+        ));
+    }
+
+    let resp: serde_json::Value = raw_resp
         .json()
         .await
         .map_err(|e| format!("Invalid Innertube response: {}", e))?;
@@ -260,13 +283,31 @@ pub async fn fetch_transcript(
     };
 
     // 5. Fetch the caption XML
-    let caption_xml = client
+    let caption_resp = client
         .get(&caption_url)
         .timeout(REQUEST_TIMEOUT)
         .header("User-Agent", USER_AGENT)
         .send()
         .await
-        .map_err(|e| format!("Failed to fetch captions: {}", e))?
+        .map_err(|e| format!("Failed to fetch captions: {}", e))?;
+
+    let caption_status = caption_resp.status();
+    if !caption_status.is_success() {
+        let body_preview: String = caption_resp
+            .text()
+            .await
+            .unwrap_or_default()
+            .chars()
+            .take(200)
+            .collect();
+        return Err(format!(
+            "Caption fetch returned HTTP {}: {}",
+            caption_status.as_u16(),
+            body_preview
+        ));
+    }
+
+    let caption_xml = caption_resp
         .text()
         .await
         .map_err(|e| format!("Failed to read captions: {}", e))?;

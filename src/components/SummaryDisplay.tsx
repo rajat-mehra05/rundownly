@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useCallback, useEffect, useMemo, useState, useRef, type ReactNode } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
 
@@ -117,17 +117,21 @@ const SummaryDisplay = memo(function SummaryDisplay({ content, isLoading, videoI
       await navigator.clipboard.writeText(content);
       success = true;
     } catch {
+      let textarea: HTMLTextAreaElement | null = null;
       try {
-        const textarea = document.createElement('textarea');
+        textarea = document.createElement('textarea');
         textarea.value = content;
         textarea.style.position = 'fixed';
         textarea.style.opacity = '0';
         document.body.appendChild(textarea);
         textarea.select();
         success = document.execCommand('copy');
-        document.body.removeChild(textarea);
       } catch {
         // Both clipboard methods failed
+      } finally {
+        if (textarea && textarea.parentNode) {
+          document.body.removeChild(textarea);
+        }
       }
     }
     if (success) {
@@ -154,12 +158,12 @@ const SummaryDisplay = memo(function SummaryDisplay({ content, isLoading, videoI
       if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
       setSaved(false);
       setSaveError('Failed to save file. Please try again.');
-      setTimeout(() => setSaveError(null), 3000);
+      savedTimeoutRef.current = setTimeout(() => setSaveError(null), 3000);
       console.error('Failed to save file:', err);
     }
   }, [content, videoId]);
 
-  const markdownComponents = useMemo(() => ({
+  const markdownComponents = useMemo((): Partial<Components> => ({
     h1: ({ children }: { children?: ReactNode }) => (
       <h1>{stripTimestamps(children)}</h1>
     ),

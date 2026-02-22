@@ -6,7 +6,7 @@ Built with [Tauri 2](https://tauri.app/) + [Next.js](https://nextjs.org/) + [Cla
 
 ## Why I Built This
 
-I watch a lot of YouTube (conference talks, system design, interviews, podcasts, etc) and most of it is way longer than it needs to be. I wanted a tool that could pull out the key points so I could decide what's actually worth my time.
+I watch a lot of YouTube (conference talks, system design, interviews, podcasts, etc.) and most of it is way longer than it needs to be. I wanted a tool that could pull out the key points so I could decide what's actually worth my time.
 
 YouTube's built-in "Ask Gemini" feature technically does this, but the output formatting was painful to read. Walls of text with no structure, no timestamps, no way to scan it quickly. I knew I could do better.
 
@@ -72,7 +72,7 @@ Outputs platform-specific installers (`.dmg`, `.msi`, `.AppImage`) in `src-tauri
 | Desktop framework | Tauri 2 |
 | Frontend | Next.js 16, React 19, Tailwind CSS 4 |
 | Backend | Rust, reqwest, tokio |
-| AI | Claude API (Sonnet 4.5 default) |
+| AI | Claude API (Sonnet 4.6 default) |
 | Markdown | react-markdown |
 | Storage | tauri-plugin-store (settings), OS keychain (API key) |
 

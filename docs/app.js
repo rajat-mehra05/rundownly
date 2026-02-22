@@ -52,7 +52,9 @@ var downloadUrls = { macos: RELEASES_PAGE, windows: RELEASES_PAGE, linux: RELEAS
 // Apple Silicon. For reliable detection, prefer navigator.userAgentData
 // (User-Agent Client Hints) in Chromium-based browsers.
 function isAppleSilicon() {
-  return !/Intel/.test(navigator.userAgent);
+  var ua = navigator.userAgent;
+  var isMac = /Macintosh|Mac OS/.test(ua) && !/iPhone|iPad|iPod|Mobile/.test(ua);
+  return isMac && !/Intel/.test(ua);
 }
 
 function updateDownloadBtn(os) {
