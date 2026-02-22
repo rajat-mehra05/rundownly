@@ -4,6 +4,22 @@ AI-powered YouTube video summarizer that runs on your desktop. Paste a link, get
 
 Built with [Tauri 2](https://tauri.app/) + [Next.js](https://nextjs.org/) + [Claude AI](https://www.anthropic.com/).
 
+## Why I Built This
+
+I watch a lot of YouTube (conference talks, system design, interviews, podcasts, etc) and most of it is way longer than it needs to be. I wanted a tool that could pull out the key points so I could decide what's actually worth my time.
+
+YouTube's built-in "Ask Gemini" feature technically does this, but the output formatting was painful to read. Walls of text with no structure, no timestamps, no way to scan it quickly. I knew I could do better.
+
+So I built [yt-video-summariser](https://github.com/rajat-mehra05/yt-video-summariser), a full-stack Next.js web app that did exactly what I wanted. Clean summaries, clickable timestamps, multiple languages. It worked great... locally though.
+
+The moment I deployed it, YouTube started blocking every request. Turns out YouTube aggressively rejects traffic from cloud/datacenter IPs (AWS, GCP, Vercel, all of them) with "Sign in to confirm you're not a bot" walls. Free proxy services? Blocked too. The only real fix was a residential proxy at ~$6/month, and I wasn't about to pay a recurring cost just to keep a side project alive.
+
+Then it clicked: if the problem is that YouTube blocks server IPs but not home IPs, why not just run the whole thing on the user's machine?
+
+That's how Rundownly was born. A desktop app that fetches transcripts directly from your IP. No server, no proxy, no cloud. YouTube doesn't block you because *you're just a person watching YouTube*. The architectural constraint that killed the web app became a non-issue the moment I moved to desktop.
+
+Building it with Tauri and Rust was also a learning goal. The transcript fetching, Innertube API integration, and YouTube's GDPR consent handling are all written in Rust, and building a real product with it has been worth every compile-time fight.
+
 ## Features
 
 - **Runs locally** — YouTube is accessed from your IP. No server, no IP blocks.

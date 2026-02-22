@@ -5,6 +5,10 @@ import ReactMarkdown from 'react-markdown';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
 
+// The `g` flag is intentional. This regex is never used directly with .exec()/.test() —
+// renderTimestampLinks creates a fresh RegExp from TIMESTAMP_REGEX.source, and
+// stripTimestamps uses String.prototype.replace (which resets lastIndex).
+// Do NOT reuse TIMESTAMP_REGEX directly with .exec() or .test() to avoid lastIndex bugs.
 const TIMESTAMP_REGEX = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;
 
 function parseTimestampToSeconds(ts: string): number {
@@ -96,6 +100,7 @@ interface SummaryDisplayProps {
 const SummaryDisplay = memo(function SummaryDisplay({ content, isLoading, videoId }: SummaryDisplayProps) {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -107,21 +112,29 @@ const SummaryDisplay = memo(function SummaryDisplay({ content, isLoading, videoI
   }, []);
 
   const handleCopy = useCallback(async () => {
+    let success = false;
     try {
       await navigator.clipboard.writeText(content);
+      success = true;
     } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = content;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = content;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch {
+        // Both clipboard methods failed
+      }
     }
-    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-    setCopied(true);
-    copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
+    if (success) {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      setCopied(true);
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
+    }
   }, [content]);
 
   const handleDownload = useCallback(async () => {
@@ -134,11 +147,14 @@ const SummaryDisplay = memo(function SummaryDisplay({ content, isLoading, videoI
       if (!filePath) return;
       await writeTextFile(filePath, content);
       if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      setSaveError(null);
       setSaved(true);
       savedTimeoutRef.current = setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
       setSaved(false);
+      setSaveError('Failed to save file. Please try again.');
+      setTimeout(() => setSaveError(null), 3000);
       console.error('Failed to save file:', err);
     }
   }, [content, videoId]);
@@ -196,7 +212,7 @@ const SummaryDisplay = memo(function SummaryDisplay({ content, isLoading, videoI
               ) : (
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               )}
-              {saved ? 'Saved!' : 'Download'}
+              {saveError ? 'Failed' : saved ? 'Saved!' : 'Download'}
             </button>
           </div>
         ) : null}

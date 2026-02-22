@@ -38,7 +38,6 @@ export default function Header({ onOpenSettings }: HeaderProps) {
           className="hero-logo"
         />
         <h1 className="hero-brand">Rundownly</h1>
-        {/* <p className="hero-tagline">Get instant AI-powered YouTube summaries.</p> */}
         <p className="text-sm text-muted text-center max-w-md leading-relaxed">
           Summarize any YouTube video in seconds — right from your desktop.
         </p>

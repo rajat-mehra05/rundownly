@@ -13,7 +13,7 @@
   --overlay: rgba(0, 0, 0, 0.5);
   --accent-blue: #24344d;
   --accent-blue-light: #3b82f6;
-  --text-timestamp: #de5224;
+  --text-timestamp: #c2410c;
 }
 
 /* Dark mode: triggered by system preference (unless .light) OR explicit .dark class */

@@ -66,8 +66,11 @@ function updateDownloadBtn(os) {
 updateDownloadBtn(currentOS);
 
 // Fetch latest release from GitHub API
-fetch(RELEASES_API)
+var fetchController = new AbortController();
+var fetchTimeout = setTimeout(function () { fetchController.abort(); }, 8000);
+fetch(RELEASES_API, { signal: fetchController.signal })
   .then(function (res) {
+    clearTimeout(fetchTimeout);
     if (!res.ok) throw new Error(res.status);
     return res.json();
   })
@@ -115,7 +118,8 @@ fetch(RELEASES_API)
     updateDownloadBtn(currentOS);
   })
   .catch(function () {
-    // API failed (no releases yet, rate limit, etc.) — keep fallback URLs
+    clearTimeout(fetchTimeout);
+    // API failed (no releases yet, rate limit, timeout, etc.) — keep fallback URLs
   });
 
 // ── Tab switching ──

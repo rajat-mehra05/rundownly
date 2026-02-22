@@ -6,17 +6,21 @@ use std::time::Duration;
 const CHUNK_INTERVAL_SECONDS: f64 = 30.0;
 const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
+const METADATA_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 
 static CAPTION_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?s)<text start="([^"]*)" dur="([^"]*)"[^>]*>(.*?)</text>"#).unwrap()
+    Regex::new(r#"(?s)<text start="([^"]*)" dur="([^"]*)"[^>]*>(.*?)</text>"#)
+        .expect("invalid CAPTION_RE regex")
 });
 
 static INNERTUBE_KEY_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#""INNERTUBE_API_KEY":\s*"([a-zA-Z0-9_-]+)""#).unwrap()
+    Regex::new(r#""INNERTUBE_API_KEY":\s*"([a-zA-Z0-9_-]+)""#)
+        .expect("invalid INNERTUBE_KEY_RE regex")
 });
 
 static CONSENT_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"name="v" value="([^"]+)""#).unwrap()
+    Regex::new(r#"name="v" value="([^"]+)""#)
+        .expect("invalid CONSENT_RE regex")
 });
 
 #[derive(Debug, Deserialize)]
@@ -112,37 +116,55 @@ fn parse_caption_xml(xml: &str) -> Vec<TranscriptSnippet> {
 /// Fetch watch page HTML, handling GDPR consent redirects.
 async fn fetch_watch_page(client: &reqwest::Client, video_id: &str) -> Result<String, String> {
     let url = format!("https://www.youtube.com/watch?v={}", video_id);
-    let html = client
+    let response = client
         .get(&url)
         .timeout(REQUEST_TIMEOUT)
         .header("User-Agent", USER_AGENT)
         .header("Accept-Language", "en-US")
         .send()
         .await
-        .map_err(|e| format!("Failed to fetch video page: {}", e))?
+        .map_err(|e| format!("Failed to fetch video page: {}", e))?;
+
+    let status = response.status();
+    if !status.is_success() {
+        return Err(format!("YouTube returned HTTP {} for video page", status.as_u16()));
+    }
+
+    let html = response
         .text()
         .await
         .map_err(|e| format!("Failed to read video page: {}", e))?;
 
     // Handle GDPR consent redirect (common in EU regions)
     if html.contains("action=\"https://consent.youtube.com/s\"") {
-        if let Some(cap) = CONSENT_RE.captures(&html) {
-            let consent_value = &cap[1];
-            let cookie = format!("CONSENT=YES+{}", consent_value);
-            let retry = client
-                .get(&url)
-                .timeout(REQUEST_TIMEOUT)
-                .header("User-Agent", USER_AGENT)
-                .header("Accept-Language", "en-US")
-                .header("Cookie", cookie)
-                .send()
-                .await
-                .map_err(|e| format!("Failed to fetch video page (consent retry): {}", e))?
-                .text()
-                .await
-                .map_err(|e| format!("Failed to read video page: {}", e))?;
-            return Ok(retry);
+        let cap = CONSENT_RE.captures(&html).ok_or_else(|| {
+            "GDPR consent page detected but consent token not found".to_string()
+        })?;
+        let consent_value = &cap[1];
+        let cookie = format!("CONSENT=YES+{}", consent_value);
+        let retry_response = client
+            .get(&url)
+            .timeout(REQUEST_TIMEOUT)
+            .header("User-Agent", USER_AGENT)
+            .header("Accept-Language", "en-US")
+            .header("Cookie", cookie)
+            .send()
+            .await
+            .map_err(|e| format!("Failed to fetch video page (consent retry): {}", e))?;
+
+        let retry_status = retry_response.status();
+        if !retry_status.is_success() {
+            return Err(format!(
+                "YouTube returned HTTP {} on consent retry",
+                retry_status.as_u16()
+            ));
         }
+
+        let retry = retry_response
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read video page: {}", e))?;
+        return Ok(retry);
     }
 
     Ok(html)
@@ -280,7 +302,7 @@ pub async fn fetch_metadata(
 
     let resp = client
         .get(&url)
-        .timeout(Duration::from_secs(5))
+        .timeout(METADATA_REQUEST_TIMEOUT)
         .send()
         .await
         .map_err(|e| format!("Failed to fetch metadata: {}", e))?;

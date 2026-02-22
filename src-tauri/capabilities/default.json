@@ -16,7 +16,6 @@
         { "path": "$APPDATA/**" },
         { "path": "$DOCUMENT/**" },
         { "path": "$DOWNLOAD/**" },
-        { "path": "$HOME/**" },
         { "path": "$DESKTOP/**" }
       ]
     }
