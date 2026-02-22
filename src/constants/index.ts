@@ -1,7 +1,7 @@
 import type { SummaryLength, SummaryLanguage } from '@/types';
 
 // Anthropic defaults
-export const DEFAULT_MODEL = 'claude-sonnet-4-6-20250514';
+export const DEFAULT_MODEL = 'claude-sonnet-4-6';
 
 // Summary length configuration
 export const SUMMARY_LENGTH_CONFIG: Record<SummaryLength, { maxTokens: number; label: string; description: string }> = {
