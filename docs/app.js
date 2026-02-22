@@ -34,17 +34,23 @@ var LABELS = {
   macos: 'Download for macOS',
   windows: 'Download for Windows',
   linux: 'Download for Linux',
+  android: 'Download for Android',
 };
 
 // Detect current OS
 var ua = navigator.userAgent.toLowerCase();
 var currentOS = 'macos';
 if (ua.indexOf('win') !== -1) currentOS = 'windows';
+else if (ua.indexOf('android') !== -1) currentOS = 'android';
 else if (ua.indexOf('linux') !== -1) currentOS = 'linux';
 
 // Download URLs — fallback to releases page
-var downloadUrls = { macos: RELEASES_PAGE, windows: RELEASES_PAGE, linux: RELEASES_PAGE };
+var downloadUrls = { macos: RELEASES_PAGE, windows: RELEASES_PAGE, linux: RELEASES_PAGE, android: RELEASES_PAGE };
 
+// Best-effort heuristic: UA parsing is unreliable on modern macOS browsers
+// (Safari 17+, Chrome 110+) due to UA freezing — Intel may be reported even on
+// Apple Silicon. For reliable detection, prefer navigator.userAgentData
+// (User-Agent Client Hints) in Chromium-based browsers.
 function isAppleSilicon() {
   return !/Intel/.test(navigator.userAgent);
 }
@@ -100,6 +106,10 @@ fetch(RELEASES_API)
     var deb = assets.find(function (a) { return /\.deb$/i.test(a.name); });
     if (appImage) downloadUrls.linux = appImage.browser_download_url;
     else if (deb) downloadUrls.linux = deb.browser_download_url;
+
+    // Android: .apk
+    var apk = assets.find(function (a) { return /\.apk$/i.test(a.name); });
+    if (apk) downloadUrls.android = apk.browser_download_url;
 
     // Refresh the button with real URL
     updateDownloadBtn(currentOS);

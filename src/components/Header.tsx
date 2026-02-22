@@ -33,8 +33,8 @@ export default function Header({ onOpenSettings }: HeaderProps) {
         <img
           src={logo.src}
           alt="Rundownly"
-          width="120"
-          height="120"
+          width="140"
+          height="140"
           className="hero-logo"
         />
         <h1 className="hero-brand">Rundownly</h1>

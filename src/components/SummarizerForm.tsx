@@ -46,16 +46,20 @@ export default function SummarizerForm({ onSubmit, disabled, isLoading }: Summar
         ))}
 
         <div className="ml-auto">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as SummaryLanguage)}
-            className="text-sm bg-input-bg border border-input-border rounded-lg px-3 py-1.5 pr-8 text-foreground appearance-none bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
-            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")` }}
-          >
-            {LANGUAGE_OPTIONS.map((lang) => (
-              <option key={lang.value} value={lang.value}>{lang.label}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as SummaryLanguage)}
+              className="text-sm bg-input-bg border border-input-border rounded-lg px-3 py-1.5 pr-8 text-foreground appearance-none"
+            >
+              {LANGUAGE_OPTIONS.map((lang) => (
+                <option key={lang.value} value={lang.value}>{lang.label}</option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted text-xs">
+              ▾
+            </span>
+          </div>
         </div>
       </div>
 

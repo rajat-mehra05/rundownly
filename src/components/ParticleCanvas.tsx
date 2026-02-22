@@ -2,6 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 
+interface Particle {
+  x: number; y: number; r: number;
+  dx: number; dy: number; opacity: number;
+}
+
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -13,11 +18,6 @@ export default function ParticleCanvas() {
 
     let animId: number;
     const count = 60;
-
-    interface Particle {
-      x: number; y: number; r: number;
-      dx: number; dy: number; opacity: number;
-    }
 
     let particles: Particle[] = [];
 
@@ -67,8 +67,8 @@ export default function ParticleCanvas() {
     window.addEventListener('resize', onResize);
 
     const onVisibility = () => {
-      if (document.hidden) cancelAnimationFrame(animId);
-      else draw();
+      cancelAnimationFrame(animId);
+      if (!document.hidden) draw();
     };
     document.addEventListener('visibilitychange', onVisibility);
 

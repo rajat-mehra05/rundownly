@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useMemo, useState, useRef, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState, useRef, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
@@ -99,6 +99,13 @@ const SummaryDisplay = memo(function SummaryDisplay({ content, isLoading, videoI
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+    };
+  }, []);
+
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(content);
@@ -118,16 +125,22 @@ const SummaryDisplay = memo(function SummaryDisplay({ content, isLoading, videoI
   }, [content]);
 
   const handleDownload = useCallback(async () => {
-    const defaultName = videoId ? `rundownly-${videoId}.md` : 'rundownly-summary.md';
-    const filePath = await save({
-      defaultPath: defaultName,
-      filters: [{ name: 'Markdown', extensions: ['md'] }],
-    });
-    if (!filePath) return;
-    await writeTextFile(filePath, content);
-    if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
-    setSaved(true);
-    savedTimeoutRef.current = setTimeout(() => setSaved(false), 2000);
+    try {
+      const defaultName = videoId ? `rundownly-${videoId}.md` : 'rundownly-summary.md';
+      const filePath = await save({
+        defaultPath: defaultName,
+        filters: [{ name: 'Markdown', extensions: ['md'] }],
+      });
+      if (!filePath) return;
+      await writeTextFile(filePath, content);
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      setSaved(true);
+      savedTimeoutRef.current = setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
+      setSaved(false);
+      console.error('Failed to save file:', err);
+    }
   }, [content, videoId]);
 
   const markdownComponents = useMemo(() => ({

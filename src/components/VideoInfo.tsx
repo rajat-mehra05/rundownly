@@ -20,6 +20,7 @@ export default function VideoInfo({ title, channel, videoId }: VideoInfoProps) {
           target="_blank"
           rel="noopener noreferrer"
           className="video-info-thumbnail-link"
+          aria-label={`Open video: ${title || 'YouTube video'}`}
         >
           <img
             src={thumbnailUrl}

@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Header from '@/components/Header';
-import ParticleCanvas from '@/components/ParticleCanvas';
 import SummarizerForm from '@/components/SummarizerForm';
 import VideoInfo from '@/components/VideoInfo';
 import SummaryDisplay from '@/components/SummaryDisplay';
@@ -11,6 +10,7 @@ import { hasApiKey } from '@/lib/tauri';
 import { useSummarize } from '@/hooks/useSummarize';
 import type { SummaryLength, SummaryLanguage } from '@/types';
 
+const ParticleCanvas = dynamic(() => import('@/components/ParticleCanvas'), { ssr: false });
 const OnboardingModal = dynamic(() => import('@/components/OnboardingModal'), { ssr: false });
 const SettingsPanel = dynamic(() => import('@/components/SettingsPanel'), { ssr: false });
 

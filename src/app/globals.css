@@ -16,7 +16,7 @@
   --text-timestamp: #de5224;
 }
 
-/* Dark mode: triggered by system preference OR .dark class on <html> */
+/* Dark mode: triggered by system preference (unless .light) OR explicit .dark class */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
     --background: #09090b;
@@ -36,6 +36,8 @@
   }
 }
 
+/* Explicit .dark class reuses the same values — kept as a separate rule
+   because @media blocks cannot share selectors with top-level rules. */
 :root.dark {
   --background: #09090b;
   --bg-gradient: radial-gradient(ellipse at 50% -20%, #2e1065 0%, #120a28 40%, #09090b 70%);
