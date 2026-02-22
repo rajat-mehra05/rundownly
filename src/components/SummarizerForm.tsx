@@ -46,15 +46,20 @@ export default function SummarizerForm({ onSubmit, disabled, isLoading }: Summar
         ))}
 
         <div className="ml-auto">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as SummaryLanguage)}
-            className="text-sm bg-input-bg border border-input-border rounded-lg px-3 py-1.5 text-foreground"
-          >
-            {LANGUAGE_OPTIONS.map((lang) => (
-              <option key={lang.value} value={lang.value}>{lang.label}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as SummaryLanguage)}
+              className="text-sm bg-input-bg border border-input-border rounded-lg px-3 py-1.5 pr-8 text-foreground appearance-none"
+            >
+              {LANGUAGE_OPTIONS.map((lang) => (
+                <option key={lang.value} value={lang.value}>{lang.label}</option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted text-xs">
+              ▾
+            </span>
+          </div>
         </div>
       </div>
 

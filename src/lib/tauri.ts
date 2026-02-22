@@ -24,7 +24,7 @@ export async function saveApiKey(key: string): Promise<void> {
 }
 
 export async function getSettings(): Promise<Settings> {
-  if (!isTauri()) return { model: 'claude-sonnet-4-5-20250929' };
+  if (!isTauri()) return { model: 'claude-sonnet-4-6' };
   return tauriInvoke<Settings>('get_settings');
 }
 

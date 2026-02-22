@@ -1,8 +1,27 @@
 use regex::Regex;
 use serde::Deserialize;
+use std::sync::LazyLock;
+use std::time::Duration;
 
 const CHUNK_INTERVAL_SECONDS: f64 = 30.0;
-const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
+const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
+const METADATA_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
+
+static CAPTION_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?s)<text start="([^"]*)" dur="([^"]*)"[^>]*>(.*?)</text>"#)
+        .expect("invalid CAPTION_RE regex")
+});
+
+static INNERTUBE_KEY_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#""INNERTUBE_API_KEY":\s*"([a-zA-Z0-9_-]+)""#)
+        .expect("invalid INNERTUBE_KEY_RE regex")
+});
+
+static CONSENT_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"name="v" value="([^"]+)""#)
+        .expect("invalid CONSENT_RE regex")
+});
 
 #[derive(Debug, Deserialize)]
 struct CaptionTrack {
@@ -81,11 +100,9 @@ fn decode_html_entities(s: &str) -> String {
 }
 
 fn parse_caption_xml(xml: &str) -> Vec<TranscriptSnippet> {
-    // (?s) = dotall so .*? spans newlines inside <text> tags
-    let re = Regex::new(r#"(?s)<text start="([^"]*)" dur="([^"]*)"[^>]*>(.*?)</text>"#).unwrap();
     let mut snippets = Vec::new();
 
-    for cap in re.captures_iter(xml) {
+    for cap in CAPTION_RE.captures_iter(xml) {
         let start: f64 = cap[1].parse().unwrap_or(0.0);
         let text = decode_html_entities(&cap[3]);
         if !text.trim().is_empty() {
@@ -99,36 +116,60 @@ fn parse_caption_xml(xml: &str) -> Vec<TranscriptSnippet> {
 /// Fetch watch page HTML, handling GDPR consent redirects.
 async fn fetch_watch_page(client: &reqwest::Client, video_id: &str) -> Result<String, String> {
     let url = format!("https://www.youtube.com/watch?v={}", video_id);
-    let html = client
+    let response = client
         .get(&url)
+        .timeout(REQUEST_TIMEOUT)
         .header("User-Agent", USER_AGENT)
         .header("Accept-Language", "en-US")
         .send()
         .await
-        .map_err(|e| format!("Failed to fetch video page: {}", e))?
+        .map_err(|e| format!("Failed to fetch video page: {}", e))?;
+
+    let status = response.status();
+    if !status.is_success() {
+        return Err(format!("YouTube returned HTTP {} for video page", status.as_u16()));
+    }
+
+    let html = response
         .text()
         .await
         .map_err(|e| format!("Failed to read video page: {}", e))?;
 
     // Handle GDPR consent redirect (common in EU regions)
     if html.contains("action=\"https://consent.youtube.com/s\"") {
-        let consent_re = Regex::new(r#"name="v" value="([^"]+)""#).unwrap();
-        if let Some(cap) = consent_re.captures(&html) {
-            let consent_value = &cap[1];
-            let cookie = format!("CONSENT=YES+{}", consent_value);
-            let retry = client
-                .get(&url)
-                .header("User-Agent", USER_AGENT)
-                .header("Accept-Language", "en-US")
-                .header("Cookie", cookie)
-                .send()
-                .await
-                .map_err(|e| format!("Failed to fetch video page (consent retry): {}", e))?
-                .text()
-                .await
-                .map_err(|e| format!("Failed to read video page: {}", e))?;
-            return Ok(retry);
+        let cap = CONSENT_RE.captures(&html).ok_or_else(|| {
+            "GDPR consent page detected but consent token not found".to_string()
+        })?;
+        let consent_value = &cap[1];
+        let cookie = format!("CONSENT=YES+{}", consent_value);
+        let retry_response = client
+            .get(&url)
+            .timeout(REQUEST_TIMEOUT)
+            .header("User-Agent", USER_AGENT)
+            .header("Accept-Language", "en-US")
+            .header("Cookie", cookie)
+            .send()
+            .await
+            .map_err(|e| format!("Failed to fetch video page (consent retry): {}", e))?;
+
+        let retry_status = retry_response.status();
+        if !retry_status.is_success() {
+            return Err(format!(
+                "YouTube returned HTTP {} on consent retry",
+                retry_status.as_u16()
+            ));
         }
+
+        let retry = retry_response
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read video page: {}", e))?;
+
+        if retry.contains("action=\"https://consent.youtube.com/s\"") {
+            return Err("YouTube consent page persisted after retry. Try again later.".to_string());
+        }
+
+        return Ok(retry);
     }
 
     Ok(html)
@@ -136,8 +177,7 @@ async fn fetch_watch_page(client: &reqwest::Client, video_id: &str) -> Result<St
 
 /// Extract INNERTUBE_API_KEY from watch page HTML.
 fn extract_innertube_key(html: &str) -> Option<String> {
-    let re = Regex::new(r#""INNERTUBE_API_KEY":\s*"([a-zA-Z0-9_-]+)""#).unwrap();
-    re.captures(html).map(|c| c[1].to_string())
+    INNERTUBE_KEY_RE.captures(html).map(|c| c[1].to_string())
 }
 
 /// Call YouTube Innertube API to get caption tracks (avoids PoToken requirement).
@@ -161,14 +201,33 @@ async fn fetch_caption_tracks(
         "videoId": video_id
     });
 
-    let resp: serde_json::Value = client
+    let raw_resp = client
         .post(&url)
+        .timeout(REQUEST_TIMEOUT)
         .header("Content-Type", "application/json")
         .header("User-Agent", USER_AGENT)
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("Failed to call Innertube API: {}", e))?
+        .map_err(|e| format!("Failed to call Innertube API: {}", e))?;
+
+    let status = raw_resp.status();
+    if !status.is_success() {
+        let body_preview: String = raw_resp
+            .text()
+            .await
+            .unwrap_or_default()
+            .chars()
+            .take(200)
+            .collect();
+        return Err(format!(
+            "Innertube API returned HTTP {}: {}",
+            status.as_u16(),
+            body_preview
+        ));
+    }
+
+    let resp: serde_json::Value = raw_resp
         .json()
         .await
         .map_err(|e| format!("Invalid Innertube response: {}", e))?;
@@ -224,12 +283,31 @@ pub async fn fetch_transcript(
     };
 
     // 5. Fetch the caption XML
-    let caption_xml = client
+    let caption_resp = client
         .get(&caption_url)
+        .timeout(REQUEST_TIMEOUT)
         .header("User-Agent", USER_AGENT)
         .send()
         .await
-        .map_err(|e| format!("Failed to fetch captions: {}", e))?
+        .map_err(|e| format!("Failed to fetch captions: {}", e))?;
+
+    let caption_status = caption_resp.status();
+    if !caption_status.is_success() {
+        let body_preview: String = caption_resp
+            .text()
+            .await
+            .unwrap_or_default()
+            .chars()
+            .take(200)
+            .collect();
+        return Err(format!(
+            "Caption fetch returned HTTP {}: {}",
+            caption_status.as_u16(),
+            body_preview
+        ));
+    }
+
+    let caption_xml = caption_resp
         .text()
         .await
         .map_err(|e| format!("Failed to read captions: {}", e))?;
@@ -237,6 +315,10 @@ pub async fn fetch_transcript(
     // 6. Parse XML into snippets
     let snippets = parse_caption_xml(&caption_xml);
     if snippets.is_empty() {
+        let lower = caption_xml.to_lowercase();
+        if lower.contains("<title>sorry</title>") || lower.contains("google.com/recaptcha") {
+            return Err("YouTube is temporarily blocking requests from your IP. Please wait a minute and try again.".to_string());
+        }
         let preview: String = caption_xml.chars().take(200).collect();
         return Err(format!(
             "Could not parse transcript. Response preview: {}",
@@ -261,7 +343,7 @@ pub async fn fetch_metadata(
 
     let resp = client
         .get(&url)
-        .timeout(std::time::Duration::from_secs(5))
+        .timeout(METADATA_REQUEST_TIMEOUT)
         .send()
         .await
         .map_err(|e| format!("Failed to fetch metadata: {}", e))?;

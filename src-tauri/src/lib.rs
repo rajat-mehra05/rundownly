@@ -11,7 +11,7 @@ use tokio::sync::Mutex;
 const STORE_NAME: &str = "settings.json";
 const API_KEY_FIELD: &str = "api_key";
 const MODEL_FIELD: &str = "model";
-const DEFAULT_MODEL: &str = "claude-sonnet-4-5-20250929";
+const DEFAULT_MODEL: &str = "claude-sonnet-4-6";
 const DEFAULT_TEMPERATURE: f64 = 0.7;
 const MAX_TRANSCRIPT_LENGTH: usize = 100_000;
 
@@ -170,8 +170,13 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .manage(AppState {
-            client: reqwest::Client::new(),
+            client: reqwest::Client::builder()
+                .cookie_store(true)
+                .build()
+                .expect("failed to build HTTP client"),
             cache: Mutex::new(cache::SummaryCache::new()),
         })
         .invoke_handler(tauri::generate_handler![
