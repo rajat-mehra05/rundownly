@@ -2,7 +2,7 @@ use regex::Regex;
 use serde::Deserialize;
 
 const CHUNK_INTERVAL_SECONDS: f64 = 30.0;
-const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
+const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 #[derive(Debug, Deserialize)]
 struct CaptionTrack {
@@ -237,6 +237,9 @@ pub async fn fetch_transcript(
     // 6. Parse XML into snippets
     let snippets = parse_caption_xml(&caption_xml);
     if snippets.is_empty() {
+        if caption_xml.contains("<title>Sorry</title>") || caption_xml.contains("google.com/recaptcha") {
+            return Err("YouTube is temporarily blocking requests from your IP. Please wait a minute and try again.".to_string());
+        }
         let preview: String = caption_xml.chars().take(200).collect();
         return Err(format!(
             "Could not parse transcript. Response preview: {}",

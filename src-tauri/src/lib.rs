@@ -173,7 +173,10 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .manage(AppState {
-            client: reqwest::Client::new(),
+            client: reqwest::Client::builder()
+                .cookie_store(true)
+                .build()
+                .expect("failed to build HTTP client"),
             cache: Mutex::new(cache::SummaryCache::new()),
         })
         .invoke_handler(tauri::generate_handler![
