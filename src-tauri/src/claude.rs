@@ -10,8 +10,6 @@ pub enum StreamEvent {
     Delta { text: String },
     #[serde(rename = "done")]
     Done,
-    #[serde(rename = "error")]
-    Error { message: String },
 }
 
 #[derive(Deserialize)]

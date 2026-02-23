@@ -80,6 +80,27 @@ Outputs platform-specific installers (`.dmg`, `.msi`, `.AppImage`) in `src-tauri
 
 Pre-built binaries are available on the [Releases](https://github.com/rajat-mehra05/rundownly/releases) page for macOS (ARM64 & Intel), Windows, and Linux.
 
+### macOS
+
+1. Download the `.dmg` file for your architecture (Apple Silicon or Intel)
+2. Open the `.dmg` and drag Rundownly to Applications
+3. If you see **"Rundownly is damaged and can't be opened"**, run in Terminal:
+   ```bash
+   xattr -cr /Applications/Rundownly.app
+   ```
+   This removes the quarantine flag added by your browser. It's normal for open-source apps that aren't code-signed.
+
+### Windows
+
+1. Download and run the `.msi` installer
+2. If SmartScreen warns about an unrecognized app: click "More info" → "Run anyway"
+
+### Linux
+
+1. Download the `.AppImage` file
+2. Make it executable: `chmod +x Rundownly-*.AppImage`
+3. Run it: `./Rundownly-*.AppImage`
+
 ## BYOK (Bring Your Own Key)
 
 Rundownly uses the Anthropic API directly — you pay only for what you use. A typical video summary costs less than $0.01. Get your API key at [console.anthropic.com](https://console.anthropic.com/settings/keys).

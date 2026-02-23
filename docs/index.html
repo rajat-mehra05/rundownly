@@ -194,13 +194,15 @@
       <ol>
         <li>Download the <code>.dmg</code> file above</li>
         <li>Open the <code>.dmg</code> and drag to Applications</li>
-        <li>First launch: right-click the app &rarr; &ldquo;Open&rdquo; &rarr; &ldquo;Open&rdquo; again</li>
+        <li>If you see &ldquo;damaged and can&rsquo;t be opened&rdquo;, open Terminal and run:<br>
+          <code>xattr -cr /Applications/Rundownly.app</code></li>
         <li>Enter your Anthropic API key when prompted</li>
         <li>Paste a YouTube URL and hit Summarize!</li>
       </ol>
       <div class="install-note">
-        <strong>Note:</strong> You&rsquo;ll see an &ldquo;unidentified developer&rdquo; warning. This is normal for free
-        open-source apps that aren&rsquo;t code-signed.
+        <strong>Note:</strong> macOS may show a &ldquo;damaged&rdquo; or &ldquo;unidentified developer&rdquo; warning.
+        This is normal for free open-source apps that aren&rsquo;t code-signed. The <code>xattr -cr</code> command
+        removes the quarantine flag added by your browser.
       </div>
     </div>
     <div class="tab-content glass" data-tab="windows" role="tabpanel">
