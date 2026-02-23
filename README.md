@@ -4,6 +4,10 @@ AI-powered YouTube video summarizer that runs on your desktop. Paste a link, get
 
 Built with [Tauri 2](https://tauri.app/) + [Next.js](https://nextjs.org/) + [Claude AI](https://www.anthropic.com/).
 
+## Working Demo
+
+![Rundownly Demo](public/rundownly_demo.gif)
+
 ## Why I Built This
 
 I watch a lot of YouTube (conference talks, system design, interviews, podcasts, etc.) and most of it is way longer than it needs to be. I wanted a tool that could pull out the key points so I could decide what's actually worth my time.
