@@ -293,18 +293,12 @@ pub async fn fetch_transcript(
 
     let caption_status = caption_resp.status();
     if !caption_status.is_success() {
-        let body_preview: String = caption_resp
-            .text()
-            .await
-            .unwrap_or_default()
-            .chars()
-            .take(200)
-            .collect();
-        return Err(format!(
-            "Caption fetch returned HTTP {}: {}",
-            caption_status.as_u16(),
-            body_preview
-        ));
+        return Err(match caption_status.as_u16() {
+            429 => "YouTube is rate-limiting your requests. Wait a minute and try again.".to_string(),
+            403 => "YouTube blocked the caption request. Try a different video or wait a few minutes.".to_string(),
+            404 => "Captions not found for this video.".to_string(),
+            _ => format!("Caption fetch failed (HTTP {}). Try again shortly.", caption_status.as_u16()),
+        });
     }
 
     let caption_xml = caption_resp

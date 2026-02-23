@@ -42,8 +42,7 @@ export default function ParticleCanvas() {
 
     function draw() {
       ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
-      const isLight = document.documentElement.classList.contains('light');
-      const color = isLight ? '147, 51, 234' : '192, 132, 252';
+      const color = '212, 168, 83';
 
       for (const p of particles) {
         ctx!.beginPath();

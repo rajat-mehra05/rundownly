@@ -37,7 +37,7 @@ export default function SummarizerForm({ onSubmit, disabled, isLoading }: Summar
             onClick={() => setLength(l.value)}
             className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
               length === l.value
-                ? 'bg-accent text-white'
+                ? 'bg-accent text-black'
                 : 'bg-input-bg text-foreground hover:bg-card-border'
             }`}
           >
@@ -75,7 +75,7 @@ export default function SummarizerForm({ onSubmit, disabled, isLoading }: Summar
         <button
           type="submit"
           disabled={disabled || isLoading || !url.trim()}
-          className="bg-accent hover:bg-accent-hover text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-accent hover:bg-accent-hover text-black px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Summarizing...' : disabled ? 'Set up API key to start' : 'Summarize'}
         </button>

@@ -1,30 +1,3 @@
-// ── Theme toggle ──
-(function initTheme() {
-  var stored = localStorage.getItem('lp-theme');
-  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  var isLight = stored === 'light' || (!stored && !prefersDark);
-
-  if (isLight) document.documentElement.classList.add('light');
-  updateThemeIcon(isLight);
-})();
-
-function updateThemeIcon(isLight) {
-  var moon = document.getElementById('theme-icon-moon');
-  var sun = document.getElementById('theme-icon-sun');
-  if (!moon || !sun) return;
-  moon.style.display = isLight ? 'block' : 'none';
-  sun.style.display = isLight ? 'none' : 'block';
-}
-
-var toggleBtn = document.getElementById('theme-toggle');
-if (toggleBtn) {
-  toggleBtn.addEventListener('click', function () {
-    var isLight = document.documentElement.classList.toggle('light');
-    localStorage.setItem('lp-theme', isLight ? 'light' : 'dark');
-    updateThemeIcon(isLight);
-  });
-}
-
 // ── OS detection & download links ──
 var REPO = 'rajat-mehra05/rundownly';
 var RELEASES_API = 'https://api.github.com/repos/' + REPO + '/releases/latest';
@@ -47,10 +20,6 @@ else if (ua.indexOf('linux') !== -1) currentOS = 'linux';
 // Download URLs — fallback to releases page
 var downloadUrls = { macos: RELEASES_PAGE, windows: RELEASES_PAGE, linux: RELEASES_PAGE, android: RELEASES_PAGE };
 
-// Best-effort heuristic: UA parsing is unreliable on modern macOS browsers
-// (Safari 17+, Chrome 110+) due to UA freezing — Intel may be reported even on
-// Apple Silicon. For reliable detection, prefer navigator.userAgentData
-// (User-Agent Client Hints) in Chromium-based browsers.
 function isAppleSilicon() {
   var ua = navigator.userAgent;
   var isMac = /Macintosh|Mac OS/.test(ua) && !/iPhone|iPad|iPod|Mobile/.test(ua);
@@ -121,7 +90,6 @@ fetch(RELEASES_API, { signal: fetchController.signal })
   })
   .catch(function () {
     clearTimeout(fetchTimeout);
-    // API failed (no releases yet, rate limit, timeout, etc.) — keep fallback URLs
   });
 
 // ── Tab switching ──
@@ -156,7 +124,6 @@ document.querySelectorAll('.platform-link').forEach(function (link) {
 (function () {
   var reveals = document.querySelectorAll('.reveal');
   if (!reveals.length || !('IntersectionObserver' in window)) {
-    // Fallback: show everything
     reveals.forEach(function (el) { el.classList.add('visible'); });
     return;
   }
@@ -175,12 +142,17 @@ document.querySelectorAll('.platform-link').forEach(function (link) {
 
 // ── Particle canvas ──
 (function () {
+  // Respect reduced motion preference
+  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) return;
+
   var canvas = document.getElementById('particle-canvas');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
   var particles = [];
   var count = 60;
   var animId;
+  var PARTICLE_COLOR = '212, 168, 83';
 
   function resize() {
     var hero = canvas.parentElement;
@@ -205,14 +177,11 @@ document.querySelectorAll('.platform-link').forEach(function (link) {
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    var isLight = document.documentElement.classList.contains('light');
-    var color = isLight ? '147, 51, 234' : '192, 132, 252';
-
     for (var i = 0; i < particles.length; i++) {
       var p = particles[i];
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(' + color + ',' + p.opacity + ')';
+      ctx.fillStyle = 'rgba(' + PARTICLE_COLOR + ',' + p.opacity + ')';
       ctx.fill();
 
       p.x += p.dx;

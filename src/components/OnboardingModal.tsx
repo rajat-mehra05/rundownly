@@ -98,7 +98,7 @@ export default function OnboardingModal({ onComplete, onSkip }: OnboardingModalP
         <button
           onClick={() => handleSubmit()}
           disabled={!key.trim() || saving}
-          className="w-full bg-accent hover:bg-accent-hover text-white py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+          className="w-full bg-accent hover:bg-accent-hover text-black py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-3"
         >
           {saving ? 'Saving...' : 'Start Summarizing'}
         </button>
