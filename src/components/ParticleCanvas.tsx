@@ -7,18 +7,21 @@ interface Particle {
   dx: number; dy: number; opacity: number;
 }
 
+const PARTICLE_COLOR = '212, 168, 83';
+const PARTICLE_COUNT = 60;
+
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     let animId: number;
-    const count = 60;
-
     let particles: Particle[] = [];
 
     function resize() {
@@ -28,7 +31,7 @@ export default function ParticleCanvas() {
 
     function createParticles() {
       particles = [];
-      for (let i = 0; i < count; i++) {
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
         particles.push({
           x: Math.random() * canvas!.width,
           y: Math.random() * canvas!.height,
@@ -42,13 +45,11 @@ export default function ParticleCanvas() {
 
     function draw() {
       ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
-      const isLight = document.documentElement.classList.contains('light');
-      const color = isLight ? '147, 51, 234' : '192, 132, 252';
 
       for (const p of particles) {
         ctx!.beginPath();
         ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx!.fillStyle = `rgba(${color},${p.opacity})`;
+        ctx!.fillStyle = `rgba(${PARTICLE_COLOR},${p.opacity})`;
         ctx!.fill();
         p.x += p.dx;
         p.y += p.dy;

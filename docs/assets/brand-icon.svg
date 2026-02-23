@@ -1,0 +1,10 @@
+<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="brand-gold" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f5e6b8"/>
+      <stop offset="50%" stop-color="#D4A853"/>
+      <stop offset="100%" stop-color="#BF9540"/>
+    </linearGradient>
+  </defs>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M16 4h16c6.627 0 12 5.373 12 12v16c0 6.627-5.373 12-12 12H16C9.373 44 4 38.627 4 32V16C4 9.373 9.373 4 16 4zM15 16.5A2.5 2.5 0 0 1 17.5 14h9A2.5 2.5 0 0 1 29 16.5v7A2.5 2.5 0 0 1 26.5 26h-9A2.5 2.5 0 0 1 15 23.5v-7z" fill="url(#brand-gold)"/>
+</svg>

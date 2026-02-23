@@ -82,7 +82,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps) {
         {/* Save */}
         <button
           onClick={handleSave}
-          className="w-full bg-accent hover:bg-accent-hover text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
+          className="w-full bg-accent hover:bg-accent-hover text-black py-2.5 rounded-lg text-sm font-medium transition-colors"
         >
           Save
         </button>
