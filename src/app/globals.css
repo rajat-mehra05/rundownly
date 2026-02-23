@@ -12,9 +12,10 @@
   --input-border: rgba(212, 168, 83, 0.15);
   --muted: #8a8070;
   --overlay: rgba(0, 0, 0, 0.7);
-  --accent-blue: #D4A853;
-  --accent-blue-light: #BF9540;
-  --text-timestamp: #D4A853;
+  --accent-prose: var(--accent);
+  --accent-prose-light: var(--accent-hover);
+  --text-timestamp: var(--accent);
+
   color-scheme: dark;
 }
 
@@ -344,7 +345,7 @@ a.video-info-title:hover {
   top: 0.6em;
   width: 6px;
   height: 6px;
-  background: var(--accent-blue);
+  background: var(--accent-prose);
   border-radius: 50%;
 }
 
@@ -368,7 +369,7 @@ a.video-info-title:hover {
   top: 0;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--accent-blue-light);
+  color: var(--accent-prose-light);
 }
 
 .prose-summary ol {
@@ -386,7 +387,7 @@ a.video-info-title:hover {
 }
 
 .prose-summary blockquote {
-  border-left: 3px solid var(--accent-blue);
+  border-left: 3px solid var(--accent-prose);
   margin: 1rem 0;
   color: var(--muted);
   font-style: italic;

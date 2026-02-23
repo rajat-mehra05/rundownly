@@ -100,7 +100,7 @@ code {
   text-transform: uppercase;
   letter-spacing: 0.02em;
   line-height: 1;
-  color: #D4A853;
+  color: var(--accent);
   margin-bottom: 1rem;
 }
 
@@ -109,10 +109,10 @@ code {
   position: absolute;
   inset: -0.25rem -0.6rem;
   background:
-    linear-gradient(#D4A853, #D4A853) bottom left / 0% 2px no-repeat,
-    linear-gradient(#D4A853, #D4A853) bottom right / 2px 0% no-repeat,
-    linear-gradient(#D4A853, #D4A853) top right / 0% 2px no-repeat,
-    linear-gradient(#D4A853, #D4A853) top left / 2px 0% no-repeat;
+    linear-gradient(var(--accent), var(--accent)) bottom left / 0% 2px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) bottom right / 2px 0% no-repeat,
+    linear-gradient(var(--accent), var(--accent)) top right / 0% 2px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) top left / 2px 0% no-repeat;
   animation: draw-rect 1.6s ease-out 0.3s forwards;
 }
 
@@ -172,7 +172,7 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  background: #D4A853;
+  background: var(--accent);
   color: #000;
   font-size: 1.3rem;
   font-weight: 600;
@@ -184,14 +184,14 @@ code {
   border: none;
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.3s, transform 0.2s;
-  box-shadow: 0 0 16px rgba(212, 168, 83, 0.2);
+  box-shadow: 0 0 16px var(--accent-glow);
 }
 
 .download-btn:hover {
-  background: #BF9540;
+  background: var(--accent-hover);
   color: #000;
   text-decoration: none;
-  box-shadow: 0 0 24px rgba(212, 168, 83, 0.3);
+  box-shadow: 0 0 24px var(--accent-glow-strong);
   transform: translateY(-1px);
 }
 
@@ -229,7 +229,6 @@ code {
 .app-size-note {
   font-size: 1rem;
   color: var(--muted);
-  opacity: 0.7;
 }
 
 /* ── Sections ── */
@@ -262,14 +261,14 @@ code {
 /* ── Card (replaces .glass) ── */
 .card {
   background: var(--card-bg);
-  border: 1px solid rgba(212, 168, 83, 0.08);
+  border: 1px solid var(--card-border);
   border-radius: 16px;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .card:hover {
-  border-color: rgba(212, 168, 83, 0.2);
-  box-shadow: 0 0 20px rgba(212, 168, 83, 0.05);
+  border-color: var(--accent-glow);
+  box-shadow: 0 0 20px var(--card-glow);
 }
 
 /* ── Steps ── */
@@ -349,8 +348,8 @@ code {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 12px;
-  background: rgba(212, 168, 83, 0.1);
-  border: 1px solid rgba(212, 168, 83, 0.15);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-glow-strong);
   color: var(--accent);
   margin-bottom: 1rem;
 }
@@ -499,7 +498,6 @@ code {
 .footer-copy {
   font-size: 0.8rem;
   color: var(--muted);
-  opacity: 0.6;
 }
 
 /* ── Focus visible ── */
@@ -563,6 +561,11 @@ code {
 
   .tab-content {
     padding: 1.5rem;
+  }
+
+  .download-btn {
+    min-width: auto;
+    width: 100%;
   }
 }
 

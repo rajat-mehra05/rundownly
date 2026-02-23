@@ -103,12 +103,16 @@ document.querySelectorAll('.tab').forEach(function (tab) {
     });
     document.querySelectorAll('.tab-content').forEach(function (c) {
       c.classList.remove('active');
+      c.setAttribute('hidden', '');
     });
 
     this.classList.add('active');
     this.setAttribute('aria-selected', 'true');
     var content = document.querySelector('.tab-content[data-tab="' + target + '"]');
-    if (content) content.classList.add('active');
+    if (content) {
+      content.classList.add('active');
+      content.removeAttribute('hidden');
+    }
   });
 });
 

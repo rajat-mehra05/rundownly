@@ -7,11 +7,57 @@
   <title>Rundownly — AI-powered YouTube summaries from your desktop</title>
   <meta name="description"
     content="Paste a YouTube link, get a timestamped summary in under 10 seconds. Runs locally, no cloud, no sign-up. Powered by Claude.">
+  <meta name="author" content="Rajat Mehra">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#000000">
+  <link rel="canonical" href="https://rundownly.vercel.app/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Rundownly">
+  <meta property="og:title" content="Rundownly — AI-powered YouTube summaries from your desktop">
+  <meta property="og:description"
+    content="Paste a YouTube link, get a timestamped summary in under 10 seconds. Runs locally, no cloud, no sign-up. Powered by Claude.">
+  <meta property="og:url" content="https://rundownly.vercel.app/">
+  <meta property="og:image" content="https://rundownly.vercel.app/assets/logo.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Rundownly — AI-powered YouTube summaries from your desktop">
+  <meta name="twitter:description"
+    content="Paste a YouTube link, get a timestamped summary in under 10 seconds. Runs locally, no cloud, no sign-up.">
+  <meta name="twitter:image" content="https://rundownly.vercel.app/assets/logo.png">
+
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Rundownly",
+    "description": "AI-powered YouTube summaries from your desktop. Paste a YouTube link, get a timestamped summary in under 10 seconds.",
+    "url": "https://rundownly.vercel.app/",
+    "image": "https://rundownly.vercel.app/assets/logo.png",
+    "author": {
+      "@type": "Person",
+      "name": "Rajat Mehra",
+      "url": "https://rajatmehra.vercel.app/"
+    },
+    "downloadUrl": "https://github.com/rajat-mehra05/rundownly/releases",
+    "operatingSystem": ["Windows", "macOS", "Linux"],
+    "applicationCategory": "ProductivityApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
 </head>
 
 <body>
@@ -168,7 +214,7 @@
         removes the quarantine flag added by your browser.
       </div>
     </div>
-    <div class="tab-content card" data-tab="windows" role="tabpanel" id="tab-windows" aria-labelledby="tab-btn-windows">
+    <div class="tab-content card" data-tab="windows" role="tabpanel" id="tab-windows" aria-labelledby="tab-btn-windows" hidden>
       <ol>
         <li>Download the <code>.msi</code> installer above</li>
         <li>Run the installer</li>
@@ -181,7 +227,7 @@
         software without a paid code-signing certificate.
       </div>
     </div>
-    <div class="tab-content card" data-tab="linux" role="tabpanel" id="tab-linux" aria-labelledby="tab-btn-linux">
+    <div class="tab-content card" data-tab="linux" role="tabpanel" id="tab-linux" aria-labelledby="tab-btn-linux" hidden>
       <ol>
         <li>Download the <code>.AppImage</code> file above</li>
         <li>Make it executable: <code>chmod +x Rundownly-*.AppImage</code></li>
@@ -196,7 +242,7 @@
   <section class="section reveal" id="download" aria-labelledby="download-title">
     <h2 class="section-title" id="download-title">Download</h2>
     <div class="download-area">
-      <a href="#" class="download-btn" id="download-btn">
+      <a href="https://github.com/rajat-mehra05/rundownly/releases" class="download-btn" id="download-btn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -205,8 +251,8 @@
         </svg>
         <span id="download-text">Download for macOS</span>
       </a>
-      <p class="alt-platforms">Also available for <button class="platform-link" data-os="windows">Windows</button>
-        &middot; <button class="platform-link" data-os="linux">Linux</button></p>
+      <p class="alt-platforms">Also available for <button class="platform-link" data-os="windows" aria-label="Switch download to Windows">Windows</button>
+        &middot; <button class="platform-link" data-os="linux" aria-label="Switch download to Linux">Linux</button></p>
     </div>
     <div class="version-info">
       <span id="version-tag">v0.1.0</span>
