@@ -14,7 +14,6 @@ const ParticleCanvas = dynamic(() => import('@/components/ParticleCanvas'), { ss
 const OnboardingModal = dynamic(() => import('@/components/OnboardingModal'), { ssr: false });
 const SettingsPanel = dynamic(() => import('@/components/SettingsPanel'), { ssr: false });
 
-const FOOTER_TEXT = 'Powered by Claude AI · AI can make mistakes.';
 
 export default function Home() {
   const [hasKey, setHasKey] = useState<boolean | null>(null);
@@ -73,8 +72,13 @@ export default function Home() {
         <SummaryDisplay content={summary} isLoading={isLoading} videoId={metadata?.id} />
       </main>
 
-      <footer className="px-6 py-4 text-center text-xs text-muted">
-        {FOOTER_TEXT}
+      <footer className="px-6 py-4 text-center text-xs text-muted space-y-1">
+        <div className="flex items-center justify-center gap-1">
+          <a href="https://github.com/rajat-mehra05" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
+          <span>·</span>
+          <span>Built by Rajat Mehra</span>
+        </div>
+        <div>&copy; 2026 Rundownly</div>
       </footer>
 
       {showOnboarding ? (
