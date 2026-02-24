@@ -123,6 +123,10 @@ function renderChangelogFallback() {
     + 'View on GitHub</a></p>';
 }
 
+function escapeAttr(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function markdownToHtml(md) {
   // Sanitize HTML entities first
   var s = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -131,9 +135,13 @@ function markdownToHtml(md) {
   // Bold: **text**
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   // Links: [text](url)
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, function (_, text, url) {
+    return '<a href="' + escapeAttr(url) + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
+  });
   // Bare URLs (not already inside an href)
-  s = s.replace(/(?<!href=")(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  s = s.replace(/(?<!href=")(https?:\/\/[^\s<]+)/g, function (_, url) {
+    return '<a href="' + escapeAttr(url) + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
+  });
   // Bullet lists: * item or - item
   s = s.replace(/^[*-] (.+)$/gm, '<li>$1</li>');
   s = s.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
