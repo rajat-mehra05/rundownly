@@ -87,10 +87,62 @@ fetch(RELEASES_API, { signal: fetchController.signal })
 
     // Refresh the button with real URL
     updateDownloadBtn(currentOS);
+
+    // Populate "What's New" from release notes
+    renderChangelog(data);
   })
   .catch(function () {
     clearTimeout(fetchTimeout);
+    renderChangelogFallback();
   });
+
+function renderChangelog(release) {
+  var container = document.getElementById('releases');
+  if (!container) return;
+
+  var tag = release.tag_name || '';
+  var date = release.published_at
+    ? new Date(release.published_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : '';
+  var body = release.body || '';
+
+  var html = '<div class="release-card card">'
+    + '<div class="release-header"><strong>' + tag + '</strong>'
+    + (date ? ' &mdash; ' + date : '')
+    + '</div>'
+    + '<div class="release-body">' + markdownToHtml(body) + '</div>'
+    + '</div>';
+  container.innerHTML = html;
+}
+
+function renderChangelogFallback() {
+  var container = document.getElementById('releases');
+  if (!container) return;
+  container.innerHTML = '<p class="changelog-loading">Could not load release notes. '
+    + '<a href="https://github.com/' + REPO + '/releases" target="_blank" rel="noopener noreferrer">'
+    + 'View on GitHub</a></p>';
+}
+
+function markdownToHtml(md) {
+  // Sanitize HTML entities first
+  var s = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Headings: ## Title
+  s = s.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+  // Bold: **text**
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Links: [text](url)
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Bare URLs (not already inside an href)
+  s = s.replace(/(?<!href=")(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  // Bullet lists: * item or - item
+  s = s.replace(/^[*-] (.+)$/gm, '<li>$1</li>');
+  s = s.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+  // Line breaks for remaining non-empty lines
+  s = s.replace(/\n{2,}/g, '<br>');
+  // Clean up stray newlines inside tags
+  s = s.replace(/\n/g, '');
+  return s;
+}
 
 // ── Tab switching ──
 document.querySelectorAll('.tab').forEach(function (tab) {

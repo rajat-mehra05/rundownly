@@ -82,7 +82,7 @@
       <div class="step-card card">
         <span class="step-number" aria-hidden="true">1</span>
         <h3>Download the app</h3>
-        <p>Free, open source. ~6 MB download. That's 30x smaller than Electron.</p>
+        <p>Free, open source. ~4 MB download. That's 30x smaller than Electron.</p>
       </div>
       <div class="step-arrow" aria-hidden="true">&rarr;</div>
       <div class="step-card card">
@@ -214,7 +214,8 @@
         removes the quarantine flag added by your browser.
       </div>
     </div>
-    <div class="tab-content card" data-tab="windows" role="tabpanel" id="tab-windows" aria-labelledby="tab-btn-windows" hidden>
+    <div class="tab-content card" data-tab="windows" role="tabpanel" id="tab-windows" aria-labelledby="tab-btn-windows"
+      hidden>
       <ol>
         <li>Download the <code>.msi</code> installer above</li>
         <li>Run the installer</li>
@@ -227,7 +228,8 @@
         software without a paid code-signing certificate.
       </div>
     </div>
-    <div class="tab-content card" data-tab="linux" role="tabpanel" id="tab-linux" aria-labelledby="tab-btn-linux" hidden>
+    <div class="tab-content card" data-tab="linux" role="tabpanel" id="tab-linux" aria-labelledby="tab-btn-linux"
+      hidden>
       <ol>
         <li>Download the <code>.AppImage</code> file above</li>
         <li>Make it executable: <code>chmod +x Rundownly-*.AppImage</code></li>
@@ -251,31 +253,21 @@
         </svg>
         <span id="download-text">Download for macOS</span>
       </a>
-      <p class="alt-platforms">Also available for <button class="platform-link" data-os="windows" aria-label="Switch download to Windows">Windows</button>
+      <p class="alt-platforms">Also available for <button class="platform-link" data-os="windows"
+          aria-label="Switch download to Windows">Windows</button>
         &middot; <button class="platform-link" data-os="linux" aria-label="Switch download to Linux">Linux</button></p>
     </div>
     <div class="version-info">
-      <span id="version-tag">v0.1.0</span>
-      <span class="app-size-note">~6 MB · Built with Rust and Tauri</span>
+      <span id="version-tag"></span>
+      <span class="app-size-note">~4 MB · Built with Rust and Tauri</span>
     </div>
   </section>
 
-  <!-- Changelog -->
+  <!-- Changelog (populated dynamically from GitHub releases) -->
   <section class="section reveal" id="changelog" aria-labelledby="changelog-title">
     <h2 class="section-title" id="changelog-title">What&rsquo;s New</h2>
     <div class="release" id="releases">
-      <div class="release-card card">
-        <div class="release-header">
-          <strong>v0.1.0</strong> &mdash; February 2026
-        </div>
-        <ul>
-          <li>Initial release</li>
-          <li>AI-powered video summaries with timestamps</li>
-          <li>11 language support</li>
-          <li>3 summary lengths (Short, Medium, Long)</li>
-          <li>Export as Markdown and copy to clipboard</li>
-        </ul>
-      </div>
+      <p class="changelog-loading">Loading release notes&hellip;</p>
     </div>
     <p class="changelog-link"><a href="https://github.com/rajat-mehra05/rundownly/releases" target="_blank"
         rel="noopener noreferrer">See all releases
@@ -286,8 +278,8 @@
   <footer class="site-footer">
     <div class="footer-links">
       <a href="https://github.com/rajat-mehra05/rundownly" target="_blank" rel="noopener noreferrer">GitHub</a>
-      <p>Built by <a href="https://rajatmehra.vercel.app/" target="_blank" rel="noopener noreferrer">Rajat
-          Mehra</a></p>
+      <span class="footer-dot">&middot;</span>
+      <p>Built by <a href="https://rajatmehra.vercel.app/" target="_blank" rel="noopener noreferrer">Rajat Mehra</a></p>
     </div>
     <p class="footer-copy">&copy; 2026 Rundownly</p>
   </footer>

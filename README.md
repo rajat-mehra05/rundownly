@@ -1,12 +1,13 @@
 # Rundownly
 
-AI-powered YouTube video summarizer that runs on your desktop. Paste a link, get an instant summary with timestamps — no cloud, no sign-up.
+AI-powered YouTube video summarizer that runs on your desktop. Paste a link, get an instant summary with timestamps. No cloud, no sign-up.<br>
+The entire app is just `~4 MB`, 30x smaller than Electron.
 
 Built with [Tauri 2](https://tauri.app/) + [Next.js](https://nextjs.org/) + [Claude AI](https://www.anthropic.com/).
 
 ## Working Demo
 
-![Rundownly Demo](public/rundownly_demo.gif)
+![Rundownly Demo](assets/rundownly_demo.gif)
 
 ## Why I Built This
 
