@@ -42,6 +42,12 @@ body {
   font-family: var(--font-inter), Inter, system-ui, sans-serif;
 }
 
+/* Tailwind v4 preflight drops the pointer cursor on buttons. Put it back. */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
+}
+
 /* Hero styles (matching landing page) */
 .hero-brand {
   position: relative;
