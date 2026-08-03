@@ -4,14 +4,13 @@ import type { Provider } from '@/types';
 export const SUMMARIZE_BUTTON = {
   idle: 'Summarize',
   loading: 'Summarizing...',
-  chooseLength: 'Choose a length',
   // Summarizing is Anthropic-only until the model dropdown lands.
   missingKey: 'Add Anthropic key',
 };
 
 // Summarizer form
 export const FORM_COPY = {
-  lengthLabel: 'Length',
+  lengthLabel: 'Choose a length',
   urlPlaceholder: 'https://youtube.com/watch?v=...',
 };
 

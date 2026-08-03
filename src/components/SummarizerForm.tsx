@@ -9,10 +9,9 @@ const LENGTHS = (Object.entries(SUMMARY_LENGTH_CONFIG) as [SummaryLength, { labe
   ([value, config]) => ({ value, label: config.label })
 );
 
-function submitLabel(isLoading: boolean, missingKey: boolean, length: SummaryLength | null): string {
+function submitLabel(isLoading: boolean, missingKey: boolean): string {
   if (isLoading) return SUMMARIZE_BUTTON.loading;
   if (missingKey) return SUMMARIZE_BUTTON.missingKey;
-  if (!length) return SUMMARIZE_BUTTON.chooseLength;
   return SUMMARIZE_BUTTON.idle;
 }
 
@@ -35,26 +34,30 @@ export default function SummarizerForm({ onSubmit, disabled, isLoading }: Summar
 
   return (
     <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4">
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted mr-2">{FORM_COPY.lengthLabel}</span>
-        {LENGTHS.map((l) => (
-          <button
-            key={l.value}
-            type="button"
-            onClick={() => setLength(l.value)}
-            aria-pressed={length === l.value}
-            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-              length === l.value
-                ? 'bg-accent text-black'
-                : 'bg-input-bg text-foreground hover:bg-card-border'
-            }`}
-          >
-            {l.label}
-          </button>
-        ))}
+      <div>
+        <span id="length-label" className="block text-sm text-muted mb-2">
+          {FORM_COPY.lengthLabel}
+        </span>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-2" role="group" aria-labelledby="length-label">
+            {LENGTHS.map((l) => (
+              <button
+                key={l.value}
+                type="button"
+                onClick={() => setLength(l.value)}
+                aria-pressed={length === l.value}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                  length === l.value
+                    ? 'bg-accent text-black'
+                    : 'bg-input-bg text-foreground hover:bg-card-border'
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
 
-        <div className="ml-auto">
-          <div className="relative">
+          <div className="ml-auto relative">
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value as SummaryLanguage)}
@@ -84,7 +87,7 @@ export default function SummarizerForm({ onSubmit, disabled, isLoading }: Summar
           disabled={disabled || isLoading || !url.trim() || !length}
           className="bg-accent hover:bg-accent-hover text-black px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitLabel(isLoading, disabled, length)}
+          {submitLabel(isLoading, disabled)}
         </button>
       </div>
     </form>
