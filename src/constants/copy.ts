@@ -4,14 +4,18 @@ import type { Provider } from '@/types';
 export const SUMMARIZE_BUTTON = {
   idle: 'Summarize',
   loading: 'Summarizing...',
-  // Summarizing is Anthropic-only until the model dropdown lands.
-  missingKey: 'Add Anthropic key',
+  missingKey: (provider: Provider) => `Add ${PROVIDER_LABELS[provider]} key`,
 };
 
-// Summarizer form
+// Control rail
 export const FORM_COPY = {
+  modelLabel: 'Model',
   lengthLabel: 'Choose a length',
+  languageLabel: 'Language',
+  urlLabel: 'YouTube URL',
   urlPlaceholder: 'https://youtube.com/watch?v=...',
+  missingKeyHint: (provider: Provider) =>
+    `No ${PROVIDER_LABELS[provider]} key saved. Add one in Settings.`,
 };
 
 // Providers

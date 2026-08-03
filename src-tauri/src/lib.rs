@@ -1,9 +1,9 @@
 mod cache;
-mod claude;
+mod llm;
 mod provider;
 mod transcript;
 
-use claude::StreamEvent;
+use llm::StreamEvent;
 use provider::{validate_key, Provider};
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
@@ -12,8 +12,7 @@ use tokio::sync::Mutex;
 
 const STORE_NAME: &str = "settings.json";
 const MODEL_FIELD: &str = "model";
-const DEFAULT_MODEL: &str = "claude-sonnet-4-6";
-const DEFAULT_TEMPERATURE: f64 = 0.7;
+const DEFAULT_MODEL: &str = "claude-sonnet-5";
 const MAX_TRANSCRIPT_LENGTH: usize = 100_000;
 
 struct AppState {
@@ -110,6 +109,7 @@ async fn summarize(
     video_id: String,
     system_prompt: String,
     max_tokens: u32,
+    provider: Provider,
     model: String,
     length: String,
     language: String,
@@ -117,12 +117,15 @@ async fn summarize(
 ) -> Result<(), String> {
     // 1. Get API key from store
     let store = app.store(STORE_NAME).map_err(|e| e.to_string())?;
-    let api_key = stored_key(&store, Provider::Anthropic).ok_or_else(|| {
-        "No Anthropic API key configured. Please add your key in Settings.".to_string()
+    let api_key = stored_key(&store, provider).ok_or_else(|| {
+        format!(
+            "No {} API key configured. Please add your key in Settings.",
+            provider.label()
+        )
     })?;
 
     // 2. Check cache
-    let cache_key = cache::SummaryCache::key(&video_id, &length, &language);
+    let cache_key = cache::SummaryCache::key(&video_id, &model, &length, &language);
     {
         let cache_guard = state.cache.lock().await;
         if let Some(cached_summary) = cache_guard.get(&cache_key) {
@@ -167,15 +170,17 @@ async fn summarize(
         ));
     }
 
-    // 6. Stream Claude response
-    let summary = claude::summarize_stream(
+    // 6. Stream the model's response
+    let summary = llm::summarize_stream(
         &state.client,
         &api_key,
-        &model,
-        &system_prompt,
-        &transcript_data.text,
-        max_tokens,
-        DEFAULT_TEMPERATURE,
+        &llm::SummaryRequest {
+            provider,
+            model: &model,
+            system_prompt: &system_prompt,
+            transcript: &transcript_data.text,
+            max_tokens,
+        },
         &on_event,
     )
     .await?;

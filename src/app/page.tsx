@@ -6,17 +6,32 @@ import Header from '@/components/Header';
 import SummarizerForm from '@/components/SummarizerForm';
 import VideoInfo from '@/components/VideoInfo';
 import SummaryDisplay from '@/components/SummaryDisplay';
-import { getKeyStatus } from '@/lib/tauri';
+import { getKeyStatus, getSettings, saveSettings } from '@/lib/tauri';
 import { useSummarize } from '@/hooks/useSummarize';
-import type { KeyStatus, SummaryLength, SummaryLanguage } from '@/types';
+import { DEFAULT_MODEL, isKnownModel, providerForModel, firstModelFor } from '@/constants';
+import type { KeyStatus } from '@/types';
 
 const ParticleCanvas = dynamic(() => import('@/components/ParticleCanvas'), { ssr: false });
 const OnboardingModal = dynamic(() => import('@/components/OnboardingModal'), { ssr: false });
 const SettingsPanel = dynamic(() => import('@/components/SettingsPanel'), { ssr: false });
 
+/*
+  Two first-launch traps. A model saved by an older version is no longer in the
+  list, and someone holding only an OpenAI key would otherwise open on Claude
+  and face a permanently dead button.
+*/
+function startingModel(savedModel: string, keys: KeyStatus): string {
+  const model = isKnownModel(savedModel) ? savedModel : DEFAULT_MODEL;
+  const provider = providerForModel(model);
+  if (keys[provider]) return model;
+
+  const other = provider === 'anthropic' ? 'openai' : 'anthropic';
+  return keys[other] ? firstModelFor(other) : model;
+}
 
 export default function Home() {
   const [keyStatus, setKeyStatus] = useState<KeyStatus | null>(null);
+  const [model, setModel] = useState(DEFAULT_MODEL);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -27,10 +42,16 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    getKeyStatus().then((status) => {
-      setKeyStatus(status);
-      if (!status.anthropic && !status.openai) setShowOnboarding(true);
+    Promise.all([getKeyStatus(), getSettings()]).then(([keys, settings]) => {
+      setKeyStatus(keys);
+      setModel(startingModel(settings.model, keys));
+      if (!keys.anthropic && !keys.openai) setShowOnboarding(true);
     });
+  }, []);
+
+  const handleModelChange = useCallback((next: string) => {
+    setModel(next);
+    void saveSettings({ model: next });
   }, []);
 
   const handleOnboardingComplete = useCallback(() => {
@@ -47,10 +68,6 @@ export default function Home() {
     void refreshKeyStatus();
   }, [refreshKeyStatus]);
 
-  const handleSubmit = useCallback((url: string, length: SummaryLength, language: SummaryLanguage) => {
-    submitUrl(url, length, language);
-  }, [submitUrl]);
-
   if (keyStatus === null) return null;
 
   return (
@@ -59,11 +76,15 @@ export default function Home() {
       <Header onOpenSettings={() => setShowSettings(true)} />
 
       <main className="flex-1 px-6 pb-6 space-y-4">
-        <SummarizerForm
-          onSubmit={handleSubmit}
-          disabled={!keyStatus.anthropic}
-          isLoading={isLoading}
-        />
+        <div className="sticky top-0 z-10 -mx-6 px-6 pt-2 pb-4 bg-background/95 backdrop-blur">
+          <SummarizerForm
+            model={model}
+            onModelChange={handleModelChange}
+            keyStatus={keyStatus}
+            isLoading={isLoading}
+            onSubmit={submitUrl}
+          />
+        </div>
 
         {error ? (
           <div className="glass-card px-6 py-4 border-red-500/30 bg-red-500/5">
@@ -84,7 +105,10 @@ export default function Home() {
         <div className="flex items-center justify-center gap-1">
           <a href="https://github.com/rajat-mehra05" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
           <span>·</span>
-          <span>Built by Rajat Mehra</span>
+          <span>
+            Built by{' '}
+            <a href="https://rajatmehra.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Rajat Mehra</a>
+          </span>
         </div>
         <div>&copy; 2026 Rundownly</div>
       </footer>
