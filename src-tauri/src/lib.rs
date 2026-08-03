@@ -1,15 +1,16 @@
 mod cache;
 mod claude;
+mod provider;
 mod transcript;
 
 use claude::StreamEvent;
+use provider::{validate_key, Provider};
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
-use tauri_plugin_store::StoreExt;
+use tauri_plugin_store::{Store, StoreExt};
 use tokio::sync::Mutex;
 
 const STORE_NAME: &str = "settings.json";
-const API_KEY_FIELD: &str = "api_key";
 const MODEL_FIELD: &str = "model";
 const DEFAULT_MODEL: &str = "claude-sonnet-4-6";
 const DEFAULT_TEMPERATURE: f64 = 0.7;
@@ -25,27 +26,59 @@ struct Settings {
     model: String,
 }
 
+#[derive(Serialize)]
+struct KeyStatus {
+    anthropic: bool,
+    openai: bool,
+}
+
+// --- Key Storage ---
+
+/// Read a provider's key, treating blank or whitespace-only as absent.
+fn stored_key<R: tauri::Runtime>(store: &Store<R>, provider: Provider) -> Option<String> {
+    store
+        .get(provider.key_field())
+        .and_then(|v| v.as_str().map(str::trim).map(String::from))
+        .filter(|key| !key.is_empty())
+}
+
+/// Move a pre-2.1 single key into the Anthropic slot. Returns whether the store changed,
+/// so a normal launch does not rewrite the file for nothing.
+fn migrate_legacy_key<R: tauri::Runtime>(store: &Store<R>) -> bool {
+    let Some(legacy) = store.get(provider::LEGACY_KEY_FIELD) else {
+        return false;
+    };
+    let legacy_key = legacy.as_str().unwrap_or_default().trim().to_string();
+
+    // A blank legacy value must not become a blank Anthropic key, or the app believes it
+    // has a key, never prompts for one, and leaves the user with a permanently dead button.
+    if !legacy_key.is_empty() && stored_key(store, Provider::Anthropic).is_none() {
+        store.set(Provider::Anthropic.key_field(), serde_json::json!(legacy_key));
+    }
+
+    store.delete(provider::LEGACY_KEY_FIELD);
+    true
+}
+
 // --- Settings Commands ---
 
 #[tauri::command]
-async fn has_api_key(app: tauri::AppHandle) -> Result<bool, String> {
+async fn get_key_status(app: tauri::AppHandle) -> Result<KeyStatus, String> {
     let store = app.store(STORE_NAME).map_err(|e| e.to_string())?;
-    match store.get(API_KEY_FIELD) {
-        Some(val) => {
-            let key = val.as_str().unwrap_or("");
-            Ok(!key.is_empty())
-        }
-        None => Ok(false),
-    }
+    Ok(KeyStatus {
+        anthropic: stored_key(&store, Provider::Anthropic).is_some(),
+        openai: stored_key(&store, Provider::OpenAI).is_some(),
+    })
 }
 
 #[tauri::command]
-async fn save_api_key(app: tauri::AppHandle, key: String) -> Result<(), String> {
-    if !key.starts_with("sk-ant-") {
-        return Err("Invalid API key format. Key should start with 'sk-ant-'.".to_string());
-    }
+async fn save_api_key(app: tauri::AppHandle, provider: Provider, key: String) -> Result<(), String> {
+    // Keys copied from a web page very often carry a trailing newline.
+    let key = key.trim();
+    validate_key(provider, key)?;
+
     let store = app.store(STORE_NAME).map_err(|e| e.to_string())?;
-    store.set(API_KEY_FIELD, serde_json::json!(key));
+    store.set(provider.key_field(), serde_json::json!(key));
     store.save().map_err(|e| e.to_string())?;
     Ok(())
 }
@@ -84,14 +117,9 @@ async fn summarize(
 ) -> Result<(), String> {
     // 1. Get API key from store
     let store = app.store(STORE_NAME).map_err(|e| e.to_string())?;
-    let api_key = store
-        .get(API_KEY_FIELD)
-        .and_then(|v| v.as_str().map(String::from))
-        .ok_or_else(|| "No API key configured. Please add your key in Settings.".to_string())?;
-
-    if api_key.is_empty() {
-        return Err("No API key configured. Please add your key in Settings.".to_string());
-    }
+    let api_key = stored_key(&store, Provider::Anthropic).ok_or_else(|| {
+        "No Anthropic API key configured. Please add your key in Settings.".to_string()
+    })?;
 
     // 2. Check cache
     let cache_key = cache::SummaryCache::key(&video_id, &length, &language);
@@ -172,6 +200,16 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .setup(|app| {
+            // Never block boot on this. A failed write leaves the legacy key on disk
+            // and the migration simply runs again next launch.
+            if let Ok(store) = app.store(STORE_NAME) {
+                if migrate_legacy_key(&store) {
+                    let _ = store.save();
+                }
+            }
+            Ok(())
+        })
         .manage(AppState {
             client: reqwest::Client::builder()
                 .cookie_store(true)
@@ -180,7 +218,7 @@ pub fn run() {
             cache: Mutex::new(cache::SummaryCache::new()),
         })
         .invoke_handler(tauri::generate_handler![
-            has_api_key,
+            get_key_status,
             save_api_key,
             get_settings,
             save_settings,

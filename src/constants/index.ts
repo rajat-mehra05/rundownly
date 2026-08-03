@@ -1,7 +1,9 @@
-import type { SummaryLength, SummaryLanguage } from '@/types';
+import type { Provider, SummaryLength, SummaryLanguage } from '@/types';
 
 // Anthropic defaults
 export const DEFAULT_MODEL = 'claude-sonnet-4-6';
+
+export const PROVIDERS: Provider[] = ['anthropic', 'openai'];
 
 // Summary length configuration
 export const SUMMARY_LENGTH_CONFIG: Record<SummaryLength, { maxTokens: number; label: string; description: string }> = {
@@ -10,7 +12,6 @@ export const SUMMARY_LENGTH_CONFIG: Record<SummaryLength, { maxTokens: number; l
   long:   { maxTokens: 4096,  label: 'Long',   description: 'Full detail' },
 };
 
-export const DEFAULT_SUMMARY_LENGTH: SummaryLength = 'medium';
 export const DEFAULT_SUMMARY_LANGUAGE: SummaryLanguage = 'en';
 
 // Language configuration

@@ -6,9 +6,9 @@ import Header from '@/components/Header';
 import SummarizerForm from '@/components/SummarizerForm';
 import VideoInfo from '@/components/VideoInfo';
 import SummaryDisplay from '@/components/SummaryDisplay';
-import { hasApiKey } from '@/lib/tauri';
+import { getKeyStatus } from '@/lib/tauri';
 import { useSummarize } from '@/hooks/useSummarize';
-import type { SummaryLength, SummaryLanguage } from '@/types';
+import type { KeyStatus, SummaryLength, SummaryLanguage } from '@/types';
 
 const ParticleCanvas = dynamic(() => import('@/components/ParticleCanvas'), { ssr: false });
 const OnboardingModal = dynamic(() => import('@/components/OnboardingModal'), { ssr: false });
@@ -16,34 +16,42 @@ const SettingsPanel = dynamic(() => import('@/components/SettingsPanel'), { ssr:
 
 
 export default function Home() {
-  const [hasKey, setHasKey] = useState<boolean | null>(null);
+  const [keyStatus, setKeyStatus] = useState<KeyStatus | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
   const { summary, isLoading, error, metadata, submitUrl } = useSummarize();
 
+  const refreshKeyStatus = useCallback(async () => {
+    setKeyStatus(await getKeyStatus());
+  }, []);
+
   useEffect(() => {
-    hasApiKey().then((result) => {
-      setHasKey(result);
-      if (!result) setShowOnboarding(true);
+    getKeyStatus().then((status) => {
+      setKeyStatus(status);
+      if (!status.anthropic && !status.openai) setShowOnboarding(true);
     });
   }, []);
 
   const handleOnboardingComplete = useCallback(() => {
-    setHasKey(true);
     setShowOnboarding(false);
-  }, []);
+    void refreshKeyStatus();
+  }, [refreshKeyStatus]);
 
   const handleOnboardingSkip = useCallback(() => {
     setShowOnboarding(false);
   }, []);
 
+  const handleCloseSettings = useCallback(() => {
+    setShowSettings(false);
+    void refreshKeyStatus();
+  }, [refreshKeyStatus]);
+
   const handleSubmit = useCallback((url: string, length: SummaryLength, language: SummaryLanguage) => {
     submitUrl(url, length, language);
   }, [submitUrl]);
 
-  // Don't render until we've checked API key status
-  if (hasKey === null) return null;
+  if (keyStatus === null) return null;
 
   return (
     <div className="relative flex flex-col min-h-screen max-w-2xl mx-auto">
@@ -53,7 +61,7 @@ export default function Home() {
       <main className="flex-1 px-6 pb-6 space-y-4">
         <SummarizerForm
           onSubmit={handleSubmit}
-          disabled={!hasKey}
+          disabled={!keyStatus.anthropic}
           isLoading={isLoading}
         />
 
@@ -89,7 +97,7 @@ export default function Home() {
       ) : null}
 
       {showSettings ? (
-        <SettingsPanel onClose={() => setShowSettings(false)} />
+        <SettingsPanel keyStatus={keyStatus} onClose={handleCloseSettings} />
       ) : null}
     </div>
   );

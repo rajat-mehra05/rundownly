@@ -1,6 +1,11 @@
+import type { KeyStatus, Provider } from '@/types';
+import { DEFAULT_MODEL } from '@/constants';
+
 export interface Settings {
   model: string;
 }
+
+const NO_KEYS: KeyStatus = { anthropic: false, openai: false };
 
 // Tauri APIs are only available inside the Tauri WebView.
 // When running via `npm run dev` (plain browser), fall back to stubs.
@@ -13,18 +18,18 @@ async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>): Prom
   return invoke<T>(cmd, args);
 }
 
-export async function hasApiKey(): Promise<boolean> {
-  if (!isTauri()) return false;
-  return tauriInvoke<boolean>('has_api_key');
+export async function getKeyStatus(): Promise<KeyStatus> {
+  if (!isTauri()) return NO_KEYS;
+  return tauriInvoke<KeyStatus>('get_key_status');
 }
 
-export async function saveApiKey(key: string): Promise<void> {
+export async function saveApiKey(provider: Provider, key: string): Promise<void> {
   if (!isTauri()) return;
-  return tauriInvoke('save_api_key', { key });
+  return tauriInvoke('save_api_key', { provider, key });
 }
 
 export async function getSettings(): Promise<Settings> {
-  if (!isTauri()) return { model: 'claude-sonnet-4-6' };
+  if (!isTauri()) return { model: DEFAULT_MODEL };
   return tauriInvoke<Settings>('get_settings');
 }
 

@@ -1,3 +1,10 @@
+export type Provider = 'anthropic' | 'openai';
+
+export interface KeyStatus {
+  anthropic: boolean;
+  openai: boolean;
+}
+
 export type SummaryLength = 'short' | 'medium' | 'long';
 export type SummaryLanguage = 'en' | 'es' | 'fr' | 'de' | 'pt' | 'ja' | 'ko' | 'zh' | 'hi' | 'ar' | 'as';
 

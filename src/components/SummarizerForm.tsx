@@ -3,10 +3,18 @@
 import { useState, type FormEvent } from 'react';
 import type { SummaryLength, SummaryLanguage } from '@/types';
 import { SUMMARY_LENGTH_CONFIG, LANGUAGE_OPTIONS, DEFAULT_SUMMARY_LANGUAGE } from '@/constants';
+import { SUMMARIZE_BUTTON, FORM_COPY } from '@/constants/copy';
 
 const LENGTHS = (Object.entries(SUMMARY_LENGTH_CONFIG) as [SummaryLength, { label: string }][]).map(
   ([value, config]) => ({ value, label: config.label })
 );
+
+function submitLabel(isLoading: boolean, missingKey: boolean, length: SummaryLength | null): string {
+  if (isLoading) return SUMMARIZE_BUTTON.loading;
+  if (missingKey) return SUMMARIZE_BUTTON.missingKey;
+  if (!length) return SUMMARIZE_BUTTON.chooseLength;
+  return SUMMARIZE_BUTTON.idle;
+}
 
 interface SummarizerFormProps {
   onSubmit: (url: string, length: SummaryLength, language: SummaryLanguage) => void;
@@ -16,25 +24,25 @@ interface SummarizerFormProps {
 
 export default function SummarizerForm({ onSubmit, disabled, isLoading }: SummarizerFormProps) {
   const [url, setUrl] = useState('');
-  const [length, setLength] = useState<SummaryLength>('medium');
+  const [length, setLength] = useState<SummaryLength | null>(null);
   const [language, setLanguage] = useState<SummaryLanguage>(DEFAULT_SUMMARY_LANGUAGE);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!url.trim() || disabled) return;
+    if (!url.trim() || !length || disabled) return;
     onSubmit(url.trim(), length, language);
   };
 
   return (
     <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4">
-      {/* Length selector */}
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted mr-2">Length</span>
+        <span className="text-sm text-muted mr-2">{FORM_COPY.lengthLabel}</span>
         {LENGTHS.map((l) => (
           <button
             key={l.value}
             type="button"
             onClick={() => setLength(l.value)}
+            aria-pressed={length === l.value}
             className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
               length === l.value
                 ? 'bg-accent text-black'
@@ -63,21 +71,20 @@ export default function SummarizerForm({ onSubmit, disabled, isLoading }: Summar
         </div>
       </div>
 
-      {/* URL input + submit */}
       <div className="flex gap-3">
         <input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://youtube.com/watch?v=..."
+          placeholder={FORM_COPY.urlPlaceholder}
           className="flex-1 bg-input-bg border border-input-border rounded-lg px-4 py-2.5 text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
         <button
           type="submit"
-          disabled={disabled || isLoading || !url.trim()}
+          disabled={disabled || isLoading || !url.trim() || !length}
           className="bg-accent hover:bg-accent-hover text-black px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Summarizing...' : disabled ? 'Set up API key to start' : 'Summarize'}
+          {submitLabel(isLoading, disabled, length)}
         </button>
       </div>
     </form>
