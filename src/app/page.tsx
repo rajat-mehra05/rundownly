@@ -15,18 +15,13 @@ const ParticleCanvas = dynamic(() => import('@/components/ParticleCanvas'), { ss
 const OnboardingModal = dynamic(() => import('@/components/OnboardingModal'), { ssr: false });
 const SettingsPanel = dynamic(() => import('@/components/SettingsPanel'), { ssr: false });
 
-/*
-  Two first-launch traps. A model saved by an older version is no longer in the
-  list, and someone holding only an OpenAI key would otherwise open on Claude
-  and face a permanently dead button.
-*/
 function startingModel(savedModel: string, keys: KeyStatus): string {
   const model = isKnownModel(savedModel) ? savedModel : DEFAULT_MODEL;
   const provider = providerForModel(model);
   if (keys[provider]) return model;
 
   const other = provider === 'anthropic' ? 'openai' : 'anthropic';
-  return keys[other] ? firstModelFor(other) : model;
+  return (keys[other] && firstModelFor(other)) || model;
 }
 
 export default function Home() {
@@ -42,11 +37,16 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    Promise.all([getKeyStatus(), getSettings()]).then(([keys, settings]) => {
-      setKeyStatus(keys);
-      setModel(startingModel(settings.model, keys));
-      if (!keys.anthropic && !keys.openai) setShowOnboarding(true);
-    });
+    Promise.all([getKeyStatus(), getSettings()])
+      .then(([keys, settings]) => {
+        setKeyStatus(keys);
+        setModel(startingModel(settings.model, keys));
+        if (!keys.anthropic && !keys.openai) setShowOnboarding(true);
+      })
+      .catch(() => {
+        setKeyStatus({ anthropic: false, openai: false });
+        setShowOnboarding(true);
+      });
   }, []);
 
   const handleModelChange = useCallback((next: string) => {
@@ -79,7 +79,6 @@ export default function Home() {
         <div className="sticky top-0 z-10 -mx-6 px-6 pt-2 pb-4 bg-background/95 backdrop-blur">
           <SummarizerForm
             model={model}
-            onModelChange={handleModelChange}
             keyStatus={keyStatus}
             isLoading={isLoading}
             onSubmit={submitUrl}
@@ -121,7 +120,12 @@ export default function Home() {
       ) : null}
 
       {showSettings ? (
-        <SettingsPanel keyStatus={keyStatus} onClose={handleCloseSettings} />
+        <SettingsPanel
+          keyStatus={keyStatus}
+          model={model}
+          onModelChange={handleModelChange}
+          onClose={handleCloseSettings}
+        />
       ) : null}
     </div>
   );

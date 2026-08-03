@@ -2,10 +2,7 @@ import type { ModelOption, Provider, SummaryLength, SummaryLanguage } from '@/ty
 
 export const PROVIDERS: Provider[] = ['anthropic', 'openai'];
 
-/*
-  The single source of truth for which model belongs to which company. Rust is
-  told the provider on every request and never guesses.
-*/
+// Single source of truth for which model belongs to which company.
 export const MODELS: ModelOption[] = [
   { id: 'claude-opus-5', label: 'Claude Opus 5', provider: 'anthropic' },
   { id: 'claude-sonnet-5', label: 'Claude Sonnet 5', provider: 'anthropic' },
@@ -22,8 +19,8 @@ export const MODELS_BY_PROVIDER: { provider: Provider; models: ModelOption[] }[]
 
 export const DEFAULT_MODEL = 'claude-sonnet-5';
 
-// Falls back rather than returning nothing: a model saved by an older version
-// is no longer in the list, and a miss must not route to the wrong company.
+// Falls back so a model saved by an older version cannot route to the wrong
+// company.
 export function providerForModel(modelId: string): Provider {
   return MODELS.find((m) => m.id === modelId)?.provider ?? 'anthropic';
 }
@@ -32,8 +29,10 @@ export function isKnownModel(modelId: string): boolean {
   return MODELS.some((m) => m.id === modelId);
 }
 
-export function firstModelFor(provider: Provider): string {
-  return MODELS.find((m) => m.provider === provider)?.id ?? DEFAULT_MODEL;
+// Null rather than a default: another provider's model would recreate the dead
+// button the caller is switching away from.
+export function firstModelFor(provider: Provider): string | null {
+  return MODELS.find((m) => m.provider === provider)?.id ?? null;
 }
 
 // Summary length configuration

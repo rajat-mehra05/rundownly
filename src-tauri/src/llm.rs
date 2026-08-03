@@ -1,14 +1,16 @@
 use crate::provider::Provider;
 use serde::Serialize;
 use serde_json::json;
+use std::time::Duration;
 use tauri::ipc::Channel;
 
-/*
-  Both vendors count the model's private reasoning against the same token
-  budget as the visible answer, so a Short summary can spend its whole
-  allowance thinking and return nothing. Buy headroom on top of the request.
-*/
+// Both vendors bill reasoning against the same budget as the visible answer,
+// so a Short summary can think itself to empty. Buy headroom.
 const REASONING_HEADROOM_TOKENS: u32 = 2048;
+
+// Only the non-streamed call gets a deadline; a stream legitimately stays open
+// for minutes and relies on the client's connect timeout instead.
+const NON_STREAMED_TIMEOUT: Duration = Duration::from_secs(180);
 
 const ANTHROPIC_URL: &str = "https://api.anthropic.com/v1/messages";
 const OPENAI_URL: &str = "https://api.openai.com/v1/chat/completions";
@@ -31,6 +33,26 @@ enum Chunk {
     Text(String),
     Failed(String),
     Ignore,
+}
+
+// Decode only up to a character boundary. Decoding each chunk alone would
+// mangle any character split across two of them.
+fn drain_utf8(bytes: &mut Vec<u8>) -> String {
+    let (text, consumed) = match std::str::from_utf8(bytes) {
+        Ok(text) => (text.to_string(), bytes.len()),
+        Err(error) => {
+            let valid = error.valid_up_to();
+            let text = String::from_utf8_lossy(&bytes[..valid]).into_owned();
+            match error.error_len() {
+                // Genuinely malformed: skip it so the stream keeps moving.
+                Some(bad) => (text, valid + bad),
+                // Just an incomplete tail: keep it for the next chunk.
+                None => (text, valid),
+            }
+        }
+    };
+    bytes.drain(..consumed);
+    text
 }
 
 /// Parse SSE lines from a text buffer. Returns remaining unparsed buffer.
@@ -146,10 +168,7 @@ fn request_body(request: &SummaryRequest, stream: bool) -> serde_json::Value {
         transcript
     );
 
-    /*
-      No temperature on either path. Current Anthropic models reject sampling
-      parameters with a 400, and so do OpenAI's reasoning models.
-    */
+    // No temperature on either path: current models reject sampling parameters.
     match provider {
         Provider::Anthropic => json!({
             "model": model,
@@ -189,6 +208,12 @@ async fn send(
         Provider::OpenAI => client
             .post(OPENAI_URL)
             .header("authorization", format!("Bearer {api_key}")),
+    };
+
+    let request = if stream {
+        request
+    } else {
+        request.timeout(NON_STREAMED_TIMEOUT)
     };
 
     request
@@ -231,7 +256,7 @@ async fn summarize_once(
     if !response.status().is_success() {
         let status = response.status().as_u16();
         let body = response.text().await.unwrap_or_default();
-        if is_verification_wall(status, &body) {
+        if provider == Provider::OpenAI && is_verification_wall(status, &body) {
             return Err("Your OpenAI organisation needs to be verified before this model will run. \
                  Verify it at platform.openai.com/settings/organization/general, or pick a Claude model."
                 .to_string());
@@ -271,10 +296,7 @@ pub async fn summarize_stream(
         let status = response.status().as_u16();
         let body = response.text().await.unwrap_or_default();
 
-        /*
-          One retry, only for the verification wall. It cannot loop because
-          summarize_once never retries.
-        */
+        // One retry, verification wall only. Cannot loop: the retry never retries.
         if provider == Provider::OpenAI && is_verification_wall(status, &body) {
             let summary = summarize_once(client, api_key, &budgeted).await?;
             let summary = reject_if_empty(summary)?;
@@ -287,6 +309,7 @@ pub async fn summarize_stream(
         return Err(describe_http_error(provider, status, &body));
     }
 
+    let mut undecoded: Vec<u8> = Vec::new();
     let mut buffer = String::new();
     let mut summary = String::new();
     let mut stream = response;
@@ -296,7 +319,8 @@ pub async fn summarize_stream(
         .await
         .map_err(|e| format!("The connection dropped mid-summary: {e}"))?
     {
-        buffer.push_str(&String::from_utf8_lossy(&chunk));
+        undecoded.extend_from_slice(&chunk);
+        buffer.push_str(&drain_utf8(&mut undecoded));
         let (events, remaining) = parse_sse_lines(&buffer);
         buffer = remaining;
 
@@ -397,6 +421,46 @@ mod tests {
         assert!(openai.get("temperature").is_none());
         assert!(openai.get("max_tokens").is_none());
         assert_eq!(openai["max_completion_tokens"], 3072);
+    }
+
+    #[test]
+    fn a_character_split_across_chunk_boundaries_survives_reassembly() {
+        let source = "data: {\"text\":\"日本語 — café\"}\n";
+        let mut undecoded = Vec::new();
+        let mut decoded = String::new();
+
+        // One byte at a time is the worst case: every multi-byte character
+        // straddles a boundary.
+        for byte in source.as_bytes() {
+            undecoded.push(*byte);
+            decoded.push_str(&drain_utf8(&mut undecoded));
+        }
+
+        assert_eq!(decoded, source);
+        assert!(undecoded.is_empty());
+        assert!(!decoded.contains('\u{FFFD}'));
+    }
+
+    #[test]
+    fn genuinely_malformed_bytes_are_skipped_rather_than_stalling_the_stream() {
+        let mut bytes = vec![0xFF];
+        bytes.extend_from_slice(b"ok");
+
+        assert_eq!(drain_utf8(&mut bytes), "");
+        assert_eq!(drain_utf8(&mut bytes), "ok");
+        assert!(bytes.is_empty());
+    }
+
+    #[test]
+    fn sse_parsing_carries_a_partial_line_into_the_next_read() {
+        // Cut mid-payload: no event yet, and the fragment comes back intact.
+        let (events, remaining) = parse_sse_lines("event: x\ndata: {\"a\":1");
+        assert!(events.is_empty());
+
+        let (events, remaining) = parse_sse_lines(&format!("{remaining}}}\n\n"));
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].1, r#"{"a":1}"#);
+        assert!(remaining.is_empty());
     }
 
     #[test]

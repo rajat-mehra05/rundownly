@@ -14,6 +14,7 @@ const STORE_NAME: &str = "settings.json";
 const MODEL_FIELD: &str = "model";
 const DEFAULT_MODEL: &str = "claude-sonnet-5";
 const MAX_TRANSCRIPT_LENGTH: usize = 100_000;
+const CONNECT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(15);
 
 struct AppState {
     client: reqwest::Client,
@@ -218,6 +219,9 @@ pub fn run() {
         .manage(AppState {
             client: reqwest::Client::builder()
                 .cookie_store(true)
+                // Per-request timeouts live at the call sites, but a streamed
+                // summary has none, so bound the connect phase here.
+                .connect_timeout(CONNECT_TIMEOUT)
                 .build()
                 .expect("failed to build HTTP client"),
             cache: Mutex::new(cache::SummaryCache::new()),

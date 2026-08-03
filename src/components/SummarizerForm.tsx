@@ -3,13 +3,12 @@
 import { useState, type FormEvent } from 'react';
 import type { KeyStatus, SummaryLength, SummaryLanguage } from '@/types';
 import {
-  MODELS_BY_PROVIDER,
   SUMMARY_LENGTH_CONFIG,
   LANGUAGE_OPTIONS,
   DEFAULT_SUMMARY_LANGUAGE,
   providerForModel,
 } from '@/constants';
-import { SUMMARIZE_BUTTON, FORM_COPY, PROVIDER_LABELS } from '@/constants/copy';
+import { SUMMARIZE_BUTTON, FORM_COPY } from '@/constants/copy';
 
 const LENGTHS = (Object.entries(SUMMARY_LENGTH_CONFIG) as [SummaryLength, { label: string }][]).map(
   ([value, config]) => ({ value, label: config.label })
@@ -20,7 +19,6 @@ const SELECT_CLASS =
 
 interface SummarizerFormProps {
   model: string;
-  onModelChange: (model: string) => void;
   keyStatus: KeyStatus;
   isLoading: boolean;
   onSubmit: (url: string, length: SummaryLength, language: SummaryLanguage, model: string) => void;
@@ -34,7 +32,6 @@ function submitLabel(isLoading: boolean, hasKey: boolean, model: string): string
 
 export default function SummarizerForm({
   model,
-  onModelChange,
   keyStatus,
   isLoading,
   onSubmit,
@@ -78,38 +75,18 @@ export default function SummarizerForm({
             ))}
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            <div className="relative">
-              <select
-                aria-label={FORM_COPY.modelLabel}
-                value={model}
-                onChange={(e) => onModelChange(e.target.value)}
-                className={SELECT_CLASS}
-              >
-                {MODELS_BY_PROVIDER.map(({ provider: p, models }) => (
-                  <optgroup key={p} label={PROVIDER_LABELS[p]}>
-                    {models.map((m) => (
-                      <option key={m.id} value={m.id}>{m.label}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs">▾</span>
-            </div>
-
-            <div className="relative">
-              <select
-                aria-label={FORM_COPY.languageLabel}
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as SummaryLanguage)}
-                className={SELECT_CLASS}
-              >
-                {LANGUAGE_OPTIONS.map((lang) => (
-                  <option key={lang.value} value={lang.value}>{lang.label}</option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs">▾</span>
-            </div>
+          <div className="ml-auto relative">
+            <select
+              aria-label={FORM_COPY.languageLabel}
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as SummaryLanguage)}
+              className={SELECT_CLASS}
+            >
+              {LANGUAGE_OPTIONS.map((lang) => (
+                <option key={lang.value} value={lang.value}>{lang.label}</option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs">▾</span>
           </div>
         </div>
       </div>

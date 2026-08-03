@@ -9,7 +9,6 @@ export const SUMMARIZE_BUTTON = {
 
 // Control rail
 export const FORM_COPY = {
-  modelLabel: 'Model',
   lengthLabel: 'Choose a length',
   languageLabel: 'Language',
   urlLabel: 'YouTube URL',
@@ -59,6 +58,8 @@ export const SETTINGS_COPY = {
   keySaved: 'Saved',
   keyMissing: 'Not set',
   keepCurrent: 'Leave blank to keep the current key.',
+  modelLabel: 'Model',
+  modelHint: 'Summaries use this model. It needs a key for its provider below.',
 };
 
 // Onboarding

@@ -24,12 +24,8 @@ export function useSummarize(): UseSummarizeReturn {
   const [error, setError] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
 
-  /*
-    Starting a second summary while the first still streams would interleave
-    two answers into nonsense, and whichever finished first would clear the
-    loading state. Tag each run and ignore anything from an older one. The
-    abandoned request keeps going and still caches its result.
-  */
+  // Tag each run so a superseded one cannot interleave its text or clear the
+  // loading state that the newer run now owns.
   const latestRequest = useRef(0);
 
   const submitUrl = useCallback(async (
@@ -87,8 +83,7 @@ export function useSummarize(): UseSummarizeReturn {
       });
     } catch (err) {
       if (isStale()) return;
-      // Drop whatever streamed before the failure. A half-written summary
-      // sitting under an error message reads as if it succeeded.
+      // A half-written summary under an error message reads as success.
       setSummary('');
       setError(err instanceof Error ? err.message : String(err));
     } finally {
