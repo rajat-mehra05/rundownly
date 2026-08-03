@@ -31,6 +31,7 @@ export default function ApiKeyInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={`w-full border border-input-border rounded-lg px-3 py-2 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-accent/40 ${className}`}
+        autoComplete="off"
         autoFocus={autoFocus}
       />
       <button

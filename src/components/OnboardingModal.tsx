@@ -43,11 +43,10 @@ export default function OnboardingModal({ onComplete, onSkip }: OnboardingModalP
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onSkip();
-      if (e.key === 'Enter' && key.trim()) handleSubmit();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onSkip, key, handleSubmit]);
+  }, [onSkip]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay">
@@ -87,9 +86,12 @@ export default function OnboardingModal({ onComplete, onSkip }: OnboardingModalP
         </div>
 
         <form onSubmit={handleSubmit} className="bg-input-bg rounded-lg p-4 mb-6">
-          <p className="text-sm font-medium mb-1">{ONBOARDING_COPY.stepTwoTitle}</p>
+          <label htmlFor="onboarding-api-key" className="block text-sm font-medium mb-1">
+            {ONBOARDING_COPY.stepTwoTitle}
+          </label>
           <p className="text-sm text-muted mb-3">{ONBOARDING_COPY.stepTwoBody}</p>
           <ApiKeyInput
+            id="onboarding-api-key"
             value={key}
             onChange={(value) => { setKey(value); setError(''); }}
             placeholder={PROVIDER_KEY_PLACEHOLDER[provider]}

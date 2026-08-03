@@ -6,6 +6,7 @@ import { saveApiKey } from '@/lib/tauri';
 import { PROVIDERS } from '@/constants';
 import {
   SETTINGS_COPY,
+  PROVIDER_LABELS,
   PROVIDER_KEY_PLACEHOLDER,
   KEY_STORAGE_NOTE,
 } from '@/constants/copy';
@@ -34,17 +35,27 @@ export default function SettingsPanel({ keyStatus, onClose }: SettingsPanelProps
   const handleSave = useCallback(async () => {
     setError('');
     setSaving(true);
+    const failures: string[] = [];
     try {
       for (const provider of PROVIDERS) {
         const key = keys[provider].trim();
-        if (key) await saveApiKey(provider, key);
+        if (!key) continue;
+        try {
+          await saveApiKey(provider, key);
+        } catch (err) {
+          const reason = err instanceof Error ? err.message : String(err);
+          failures.push(`${PROVIDER_LABELS[provider]}: ${reason}`);
+        }
       }
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
+
+    if (failures.length > 0) {
+      setError(failures.join(' '));
+      return;
+    }
+    onClose();
   }, [keys, onClose]);
 
   return (
