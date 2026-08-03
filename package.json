@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "tauri dev",
     "lint": "eslint",
+    "doctor": "react-doctor .",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build"
@@ -30,6 +31,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "react-doctor": "^0.9.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

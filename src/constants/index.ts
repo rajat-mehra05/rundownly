@@ -1,9 +1,39 @@
-import type { Provider, SummaryLength, SummaryLanguage } from '@/types';
-
-// Anthropic defaults
-export const DEFAULT_MODEL = 'claude-sonnet-4-6';
+import type { ModelOption, Provider, SummaryLength, SummaryLanguage } from '@/types';
 
 export const PROVIDERS: Provider[] = ['anthropic', 'openai'];
+
+// Single source of truth for which model belongs to which company.
+export const MODELS: ModelOption[] = [
+  { id: 'claude-opus-5', label: 'Claude Opus 5', provider: 'anthropic' },
+  { id: 'claude-sonnet-5', label: 'Claude Sonnet 5', provider: 'anthropic' },
+  { id: 'gpt-5.1', label: 'GPT-5.1', provider: 'openai' },
+  { id: 'gpt-5', label: 'GPT-5', provider: 'openai' },
+];
+
+// Grouped once at module load rather than re-derived in every render.
+export const MODELS_BY_PROVIDER: { provider: Provider; models: ModelOption[] }[] =
+  PROVIDERS.map((provider) => ({
+    provider,
+    models: MODELS.filter((m) => m.provider === provider),
+  }));
+
+export const DEFAULT_MODEL = 'claude-sonnet-5';
+
+// Falls back so a model saved by an older version cannot route to the wrong
+// company.
+export function providerForModel(modelId: string): Provider {
+  return MODELS.find((m) => m.id === modelId)?.provider ?? 'anthropic';
+}
+
+export function isKnownModel(modelId: string): boolean {
+  return MODELS.some((m) => m.id === modelId);
+}
+
+// Null rather than a default: another provider's model would recreate the dead
+// button the caller is switching away from.
+export function firstModelFor(provider: Provider): string | null {
+  return MODELS.find((m) => m.provider === provider)?.id ?? null;
+}
 
 // Summary length configuration
 export const SUMMARY_LENGTH_CONFIG: Record<SummaryLength, { maxTokens: number; label: string; description: string }> = {

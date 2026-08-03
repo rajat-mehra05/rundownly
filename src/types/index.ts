@@ -1,5 +1,11 @@
 export type Provider = 'anthropic' | 'openai';
 
+export interface ModelOption {
+  id: string;
+  label: string;
+  provider: Provider;
+}
+
 export interface KeyStatus {
   anthropic: boolean;
   openai: boolean;
@@ -15,9 +21,8 @@ export interface VideoMetadata {
 }
 
 export interface StreamEvent {
-  type: 'metadata' | 'delta' | 'done' | 'error';
+  type: 'metadata' | 'delta' | 'done';
   title?: string;
   author?: string;
   text?: string;
-  message?: string;
 }

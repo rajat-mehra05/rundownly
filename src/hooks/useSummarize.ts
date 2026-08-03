@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { SummaryLength, SummaryLanguage, VideoMetadata, StreamEvent } from '@/types';
-import { SUMMARY_LENGTH_CONFIG, DEFAULT_MODEL } from '@/constants';
+import { SUMMARY_LENGTH_CONFIG, providerForModel } from '@/constants';
 import { extractVideoId } from '@/utils/video';
 import { getSummarizePrompt } from '@/prompts/summarize';
 
@@ -11,7 +11,7 @@ interface UseSummarizeReturn {
   isLoading: boolean;
   error: string | null;
   metadata: VideoMetadata | null;
-  submitUrl: (url: string, length: SummaryLength, language: SummaryLanguage) => void;
+  submitUrl: (url: string, length: SummaryLength, language: SummaryLanguage, model: string) => void;
 }
 
 function isTauri(): boolean {
@@ -24,7 +24,19 @@ export function useSummarize(): UseSummarizeReturn {
   const [error, setError] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
 
-  const submitUrl = useCallback(async (url: string, length: SummaryLength, language: SummaryLanguage) => {
+  // Tag each run so a superseded one cannot interleave its text or clear the
+  // loading state that the newer run now owns.
+  const latestRequest = useRef(0);
+
+  const submitUrl = useCallback(async (
+    url: string,
+    length: SummaryLength,
+    language: SummaryLanguage,
+    model: string,
+  ) => {
+    const requestId = ++latestRequest.current;
+    const isStale = () => latestRequest.current !== requestId;
+
     setSummary('');
     setError(null);
     setMetadata(null);
@@ -42,28 +54,17 @@ export function useSummarize(): UseSummarizeReturn {
 
       const { invoke, Channel } = await import('@tauri-apps/api/core');
 
-      const systemPrompt = getSummarizePrompt(length, language);
-      const maxTokens = SUMMARY_LENGTH_CONFIG[length].maxTokens;
-
       const onEvent = new Channel<StreamEvent>();
       onEvent.onmessage = (event: StreamEvent) => {
+        if (isStale()) return;
         switch (event.type) {
           case 'metadata':
             if (event.title) {
-              setMetadata({
-                id: videoId,
-                title: event.title,
-                author: event.author ?? '',
-              });
+              setMetadata({ id: videoId, title: event.title, author: event.author ?? '' });
             }
             break;
           case 'delta':
-            if (event.text) {
-              setSummary((prev) => prev + event.text);
-            }
-            break;
-          case 'error':
-            setError(event.message ?? 'An unexpected error occurred');
+            if (event.text) setSummary((prev) => prev + event.text);
             break;
           case 'done':
             break;
@@ -72,18 +73,21 @@ export function useSummarize(): UseSummarizeReturn {
 
       await invoke('summarize', {
         videoId,
-        systemPrompt,
-        maxTokens,
-        model: DEFAULT_MODEL,
+        systemPrompt: getSummarizePrompt(length, language),
+        maxTokens: SUMMARY_LENGTH_CONFIG[length].maxTokens,
+        provider: providerForModel(model),
+        model,
         length,
         language,
         onEvent,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(message);
+      if (isStale()) return;
+      // A half-written summary under an error message reads as success.
+      setSummary('');
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setIsLoading(false);
+      if (!isStale()) setIsLoading(false);
     }
   }, []);
 

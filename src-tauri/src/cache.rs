@@ -19,9 +19,11 @@ impl SummaryCache {
         }
     }
 
-    /// Build a cache key from video ID, length, and language.
-    pub fn key(video_id: &str, length: &str, language: &str) -> String {
-        format!("{}:{}:{}", video_id, length, language)
+    /// Build a cache key. The model belongs in it: without it, switching model
+    /// and re-summarizing replays the previous model's answer and the picker
+    /// looks like it does nothing.
+    pub fn key(video_id: &str, model: &str, length: &str, language: &str) -> String {
+        format!("{}:{}:{}:{}", video_id, model, length, language)
     }
 
     pub fn get(&self, key: &str) -> Option<&str> {
